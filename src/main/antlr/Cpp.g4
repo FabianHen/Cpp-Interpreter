@@ -5,32 +5,49 @@ program :   (stmt|expr ';')* EOF;
 
 stmt    :   classdef
         |   binding
-        |   vardecl
+        |   vardecl ';'
         |   fndecl ';'
+        |   return ';'
         |   fndef
         |   print
         |   while
         |   if
         ;
 
-expr    :   fncall
-        |   cond
-        |   comp
-        |   calc
-        |   BOOL
-        |   CHAR
-        |   INT
-        |   ID
+expr    :   ID ('.' ID | '(' args? ')')+#FNCALL
+        |   'new' ID  '(' args? ')'     #NEW
+        |   '(' expr ')'                #COL
+        |   e1 = expr '*' e2 = expr     #MUL
+        |   e1 = expr '/' e2 = expr     #DIV
+        |   e1 = expr '+' e2 = expr     #ADD
+        |   e1 = expr '-' e2 = expr     #SUB
+        |   e1 = expr '==' e2 = expr    #EQUALS
+        |   e1 = expr '!=' e2 = expr    #NEAQUALS
+        |   e1 = expr '>'  e2 = expr    #GREATER
+        |   e1 = expr '<'  e2 = expr    #LESS
+        |   e1 = expr '>=' e2 = expr    #GEAQUALS
+        |   e1 = expr '<=' e2 = expr    #LEAQUALS
+        |   e1 = expr '&&' e2 =expr     #AND
+        |   e1 = expr '||' e2 =expr     #OR
+        |   expr ('[' expr ']')+        #ARRACC
+        |   '{'args'}'                  #ARRVALS
+        |   NOT expr                    #NOT
+        |   BOOL                        #BOOL
+        |   CHAR                        #CHAR
+        |   INT                         #INT
+        |   ID                          #ID
         ;
 
 // STMT
 classdef:   'class' ID (':' ID (',' ID)* )? block ';';
 
-binding :   ((ID | fncall) '.')* ID '=' expr;
+binding :   (expr '.')* ID '=' expr;
 
-vardecl :   type ID ('=' expr)?;
+vardecl :   type ID ('[' expr ']')* ('=' expr)?;
 
-fndecl  :   (type | 'void') ID '(' (type ID)? | (type ID (',' type ID)*) ')' ;
+fndecl  :   (type | 'void')? ID '(' (type ID)? | (type ID (',' type ID)*) ')' ;
+
+return  :   'return' expr?;
 
 fndef   :   fndecl block;
 
@@ -39,32 +56,14 @@ print   :   'print_bool' '(' BOOL ')'   #pbool
         |   'print_char' '(' CHAR ')'   #pchar
         ;
 
-while   :   'while' '(' cond ')' block;
+while   :   'while' '(' expr ')' block;
 
-if      :   ('if' '(' cond ')' block) elseif* else?;
-elseif  :   'else' 'if' '(' cond ')' block;
+if      :   ('if' '(' expr ')' block) elseif* else?;
+elseif  :   'else' 'if' '(' expr ')' block;
 else    :   'else' block;
 
-// EXPR
-fncall  :   ((ID | fncall) '.')* (ID| fncall) '(' expr? | (expr (',' expr)*) ')';
-
-cond    :   NOT? expr (CONN NOT? expr)*;
-
-comp    :   e1 = expr '==' e2 = expr    #EQUALS
-        |   e1 = expr '!=' e2 = expr    #NEAQUALS
-        |   e1 = expr '>'  e2 = expr    #GREATER
-        |   e1 = expr '<'  e2 = expr    #LESS
-        |   e1 = expr '>=' e2 = expr    #GEAQUALS
-        |   e1 = expr '<=' e2 = expr    #LEAQUALS
-        ;
-
-calc    :   e1 = expr '*' e2 = expr     #MUL
-        |   e1 = expr '/' e2 = expr     #DIV
-        |   e1 = expr '+' e2 = expr     #ADD
-        |   e1 = expr '-' e2 = expr     #SUB
-        ;
-
 //HELP
+args    :   expr (',' expr)*;
 block   :   '{' (stmt|expr)* '}';
 type    :   TYPEBOOL | TYPECHAR | TYPEINT | ID;
 
@@ -73,24 +72,6 @@ TYPEINT :   'int';
 TYPECHAR:   'char';
 TYPEBOOL:   'bool';
 ID      :   [a-zA-Z][a-zA-Z0-9_]*;
-
-OP      :   '+'
-        |   '-'
-        |   '*'
-        |   '/'
-        ;
-
-COMP    :   '=='
-        |   '!='
-        |   '>'
-        |   '<'
-        |   '>='
-        |   '<='
-        ;
-
-CONN    :   '&&'
-        |   '||'
-        ;
 
 NOT     :   '!';
 
