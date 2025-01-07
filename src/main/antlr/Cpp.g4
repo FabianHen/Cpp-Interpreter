@@ -39,21 +39,21 @@ expr    :   ID ('.' ID | '(' args? ')')+#FNCALL
         ;
 
 // STMT
-classdef:   'class' ID (':' ID (',' ID)* )? block ';';
+classdef:   'class' cName=ID (':' ID )? block ';';
 
 binding :   (expr '.')* ID '=' expr;
 
 vardecl :   type ID ('[' expr ']')* ('=' expr)?;
 
-fndecl  :   (type | 'void')? ID '(' (type ID)? | (type ID (',' type ID)*) ')' ;
+fndecl  :   (type | 'void')? ID '(' (params)? ')' ;
 
 return  :   'return' expr?;
 
 fndef   :   fndecl block;
 
-print   :   'print_bool' '(' BOOL ')'   #pbool
-        |   'print_int' '(' INT ')'     #pint
-        |   'print_char' '(' CHAR ')'   #pchar
+print   :   'print_bool' '(' expr ')'   #pbool
+        |   'print_int' '(' expr ')'    #pint
+        |   'print_char' '(' expr ')'   #pchar
         ;
 
 while   :   'while' '(' expr ')' block;
@@ -64,7 +64,9 @@ else    :   'else' block;
 
 //HELP
 args    :   expr (',' expr)*;
-block   :   '{' (stmt|expr)* '}';
+params  :   param (',' param)*;
+param   :   type ID;
+block   :   '{' (stmt|expr ';')* '}';
 type    :   TYPEBOOL | TYPECHAR | TYPEINT | ID;
 
 // Lexer Rules
