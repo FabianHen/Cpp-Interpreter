@@ -19,7 +19,8 @@ stmt
     ;
 
 expr
-    :   ID ('.' ID | '(' args? ')')+#FNCALL
+    :   objcall* ID '(' args? ')'   #FNCALL
+    |   objcall* ID                 #OBJMEM
     |   'new' ID  '(' args? ')'     #NEW
     |   '(' expr ')'                #COL
     |   e1 = expr '*' e2 = expr     #MUL
@@ -37,6 +38,7 @@ expr
     |   expr ('[' expr ']')+        #ARRACC
     |   '{'args'}'                  #ARRVALS
     |   incDec                      #INCDEC
+    |   expr '.'                    #OBJ
     |   NOT expr                    #NOT
     |   BOOL                        #BOOL
     |   CHAR                        #CHAR
@@ -63,7 +65,11 @@ destructor
     ;
 
 binding
-    :   (expr '.')* ID assignop expr
+    :   (objcall)* ID assignop expr
+    ;
+
+objcall
+    :   (ID ('(' args ? ')')?  '.')
     ;
 
 vardecl
