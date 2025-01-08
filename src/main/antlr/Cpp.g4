@@ -6,14 +6,14 @@ program
     ;
 
 stmt
-    :   classDef
-    |   binding
+    :   classDef ';'
+    |   binding ';'
     |   vardecl ';'
     |   fndecl ';'
     |   return ';'
-    |   constructorCall
+    |   constructorCall ';'
     |   fndef
-    |   print
+    |   print ';'
     |   while
     |   if
     ;
@@ -46,20 +46,20 @@ expr
 
 // STMT
 classDef
-    :   'class' cName=ID (':' ID )? '{' classMember* '}' ';'
+    :   'class' cName=ID (':' ID )? '{' classMember* '}'
     ;
 
 classMember
-    :   fndecl 'override'?
+    :   fndecl 'override'? ';'
     |   fndef
-    |   vardecl
     |   destructor
-    |   'virtual' ((fndecl ('=' '0')?)|fndef)
+    |   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
+    |   vardecl ';'
     |   overrideFndef
     ;
 
 destructor
-    :   '~' ID '(' ')' block
+    :   'virtual'? '~' ID '(' ')' block
     ;
 
 binding
@@ -114,10 +114,10 @@ else
 
 //HELP
 identifier
-    :   ID
-    |   ID ('[' expr ']')+
+    :   '&'? ID
+    |   '(' '&' ID ')' ('[' expr? ']')+
+    |   ID ('[' expr? ']')+
     ;
-
 incDec
     :   '++' ID     #PREINC
     |   '--' ID     #PREDEC
@@ -166,15 +166,15 @@ ASSIGN
     ;
 
 EQUSIGN :   '=';
-ID  :   [a-zA-Z][a-zA-Z0-9_]*;
 NOT :   '!';
 INT :   [0-9]+;
-CHAR:   '\'' (~[\t\r] | '\n') '\'';
+CHAR:   '\'' (~[\t\r] | '\\n') '\'';
 
 BOOL
     :   'true'
     |   'false'
     ;
 
+ID  :   [a-zA-Z][a-zA-Z0-9_]*;
 WS  :   [ \t\n\r]+ -> skip;
 COMMENT :   '//' ~[\n\r]* -> skip;
