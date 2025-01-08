@@ -1,86 +1,180 @@
 grammar Cpp;
 
 //Parser Rules
-program :   (stmt|expr ';')* EOF;
+program
+    :   (stmt | expr ';')* EOF
+    ;
 
-stmt    :   classdef
-        |   binding
-        |   vardecl ';'
-        |   fndecl ';'
-        |   return ';'
-        |   fndef
-        |   print
-        |   while
-        |   if
-        ;
+stmt
+    :   classDef
+    |   binding
+    |   vardecl ';'
+    |   fndecl ';'
+    |   return ';'
+    |   constructorCall
+    |   fndef
+    |   print
+    |   while
+    |   if
+    ;
 
-expr    :   ID ('.' ID | '(' args? ')')+#FNCALL
-        |   'new' ID  '(' args? ')'     #NEW
-        |   '(' expr ')'                #COL
-        |   e1 = expr '*' e2 = expr     #MUL
-        |   e1 = expr '/' e2 = expr     #DIV
-        |   e1 = expr '+' e2 = expr     #ADD
-        |   e1 = expr '-' e2 = expr     #SUB
-        |   e1 = expr '==' e2 = expr    #EQUALS
-        |   e1 = expr '!=' e2 = expr    #NEAQUALS
-        |   e1 = expr '>'  e2 = expr    #GREATER
-        |   e1 = expr '<'  e2 = expr    #LESS
-        |   e1 = expr '>=' e2 = expr    #GEAQUALS
-        |   e1 = expr '<=' e2 = expr    #LEAQUALS
-        |   e1 = expr '&&' e2 =expr     #AND
-        |   e1 = expr '||' e2 =expr     #OR
-        |   expr ('[' expr ']')+        #ARRACC
-        |   '{'args'}'                  #ARRVALS
-        |   NOT expr                    #NOT
-        |   BOOL                        #BOOL
-        |   CHAR                        #CHAR
-        |   INT                         #INT
-        |   ID                          #ID
-        ;
+expr
+    :   ID ('.' ID | '(' args? ')')+#FNCALL
+    |   'new' ID  '(' args? ')'     #NEW
+    |   '(' expr ')'                #COL
+    |   e1 = expr '*' e2 = expr     #MUL
+    |   e1 = expr '/' e2 = expr     #DIV
+    |   e1 = expr '+' e2 = expr     #ADD
+    |   e1 = expr '-' e2 = expr     #SUB
+    |   e1 = expr '==' e2 = expr    #EQUALS
+    |   e1 = expr '!=' e2 = expr    #NEAQUALS
+    |   e1 = expr '>'  e2 = expr    #GREATER
+    |   e1 = expr '<'  e2 = expr    #LESS
+    |   e1 = expr '>=' e2 = expr    #GEAQUALS
+    |   e1 = expr '<=' e2 = expr    #LEAQUALS
+    |   e1 = expr '&&' e2 =expr     #AND
+    |   e1 = expr '||' e2 =expr     #OR
+    |   expr ('[' expr ']')+        #ARRACC
+    |   '{'args'}'                  #ARRVALS
+    |   incDec                      #INCDEC
+    |   NOT expr                    #NOT
+    |   BOOL                        #BOOL
+    |   CHAR                        #CHAR
+    |   INT                         #INT
+    |   ID                          #ID
+    ;
 
 // STMT
-classdef:   'class' cName=ID (':' ID )? block ';';
+classDef
+    :   'class' cName=ID (':' ID )? '{' classMember* '}' ';'
+    ;
 
-binding :   (expr '.')* ID '=' expr;
+classMember
+    :   fndecl 'override'?
+    |   fndef
+    |   vardecl
+    |   destructor
+    |   'virtual' ((fndecl ('=' '0')?)|fndef)
+    |   overrideFndef
+    ;
 
-vardecl :   type ID ('[' expr ']')* ('=' expr)?;
+destructor
+    :   '~' ID '(' ')' block
+    ;
 
-fndecl  :   (type | 'void')? ID '(' (params)? ')' ;
+binding
+    :   (expr '.')* ID assignop expr
+    ;
 
-return  :   'return' expr?;
+vardecl
+    :   type identifier ( EQUSIGN expr)?
+    ;
 
-fndef   :   fndecl block;
+constructorCall
+    :   ID ID '(' args? ')'
+    ;
 
-print   :   'print_bool' '(' expr ')'   #pbool
-        |   'print_int' '(' expr ')'    #pint
-        |   'print_char' '(' expr ')'   #pchar
-        ;
+fndecl
+    :   (type | 'void')? ID '(' (paramlist)? ')'
+    ;
 
-while   :   'while' '(' expr ')' block;
+return
+    :   'return' expr?
+    ;
 
-if      :   ('if' '(' expr ')' block) elseif* else?;
-elseif  :   'else' 'if' '(' expr ')' block;
-else    :   'else' block;
+fndef
+    :   fndecl block
+    ;
+
+overrideFndef
+    :   fndecl 'override' block
+    ;
+
+print
+    :   'print_bool' '(' expr ')'   #pbool
+    |   'print_int' '(' expr ')'    #pint
+    |   'print_char' '(' expr ')'   #pchar
+    ;
+
+while
+    :   'while' '(' expr ')' block
+    ;
+
+if
+    :   ('if' '(' expr ')' block) elseif* else?
+    ;
+
+elseif
+    :   'else' 'if' '(' expr ')' block
+    ;
+
+else
+    :   'else' block
+    ;
 
 //HELP
-args    :   expr (',' expr)*;
-params  :   param (',' param)*;
-param   :   type ID;
-block   :   '{' (stmt|expr ';')* '}';
-type    :   TYPEBOOL | TYPECHAR | TYPEINT | ID;
+identifier
+    :   ID
+    |   ID ('[' expr ']')+
+    ;
+
+incDec
+    :   '++' ID     #PREINC
+    |   '--' ID     #PREDEC
+    |   ID '++'     #POSTINC
+    |   ID '--'     #POSTDEC
+    ;
+
+args
+    :   expr (',' expr)*
+    ;
+
+paramlist
+    :   param (',' param)*
+    ;
+
+param
+    :   type identifier
+    ;
+
+block
+    :   '{' (stmt|expr ';')* '}'
+    ;
+
+type
+    :   TYPEBOOL
+    |   TYPECHAR
+    |   TYPEINT
+    |   ID
+    ;
+
+assignop
+    :   ASSIGN
+    |   EQUSIGN
+    ;
 
 // Lexer Rules
 TYPEINT :   'int';
 TYPECHAR:   'char';
 TYPEBOOL:   'bool';
-ID      :   [a-zA-Z][a-zA-Z0-9_]*;
 
-NOT     :   '!';
+ASSIGN
+    :   '+='
+    |   '-='
+    |   '*='
+    |   '/='
+    ;
 
-INT     :   [0-9]+;
-CHAR    :   '\'' ~[\t\n\r] '\'';
-BOOL    :   'true'
-        |   'false'
-        ;
-WS      :   [ \t\n\r]+ -> skip ;
+EQUSIGN :   '=';
+ID  :   [a-zA-Z][a-zA-Z0-9_]*;
+NOT :   '!';
+INT :   [0-9]+;
+CHAR:   '\'' (~[\t\r] | '\n') '\'';
+
+BOOL
+    :   'true'
+    |   'false'
+    ;
+
+WS  :   [ \t\n\r]+ -> skip;
 COMMENT :   '//' ~[\n\r]* -> skip;
