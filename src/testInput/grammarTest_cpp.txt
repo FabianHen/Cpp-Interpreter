@@ -1,0 +1,53 @@
+//Printer Klasse (abstrakt)
+class Printer {
+    virtual void printStr(char str[], int size) =0;
+
+    virtual ~Printer() {
+        print_char("Printer Destructor Called\n");
+    }
+
+    Printer(const Printer& other) {
+        print_char("Printer Copy Constructor Called\n");
+    }
+};
+
+//Test Klasse erbt von Printer und überschreibt die printStr Methode
+class Test : Printer {
+    ~Test() {
+        print_char("Test Destructor Called\n");
+    }
+
+    Test(const Test& other) : Printer(other) {
+        print_char("Test Copy Constructor Called\n");
+    }
+
+    void printStr(char str[], int size) override {
+        int i = 0;
+        while (i < size) {
+            print_char(str[i]);
+            i++;
+        }
+        print_char('\n');
+    }
+
+    bool runTest() {
+        char message[12] = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'}; 
+        int size = 12;
+
+        printStr(message, size);
+        return true;
+    }
+};
+
+//main Methode erstellt 
+int main() {
+    Test test;
+    bool finished = test.runTest();
+    print_bool(finished);
+
+    Test test2 = test;
+    bool finished2 = test2.runTest();
+    print_bool(finished2);
+
+    return 0;
+}
