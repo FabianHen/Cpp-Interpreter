@@ -33,4 +33,9 @@ public class IncDecNode extends ASTNode {
   public <T> T accept(ASTVisitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    return (isInc ? "INC" : "DEC") + " " + (isPre ? "PRE" : "POST");
+  }
 }

@@ -23,4 +23,9 @@ public class IDNode extends ExprNode {
   public <T> T accept(ASTVisitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + " " + id;
+  }
 }

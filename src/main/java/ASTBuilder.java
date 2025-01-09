@@ -6,7 +6,9 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   @Override
   public ASTNode visitProgram(CppParser.ProgramContext ctx) {
     ProgramNode programNode = new ProgramNode();
-    for (var child : ctx.children) {
+    int i = 1;
+    for (var child : ctx.stmt()) {
+      System.out.println(i++ + ": " + child.getText());
       programNode.addChild(visit(child));
     }
     return programNode;
@@ -19,7 +21,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitNEW(CppParser.NEWContext ctx) {
-    return new NEWNode((IDNode) visit(ctx.ID()), (ArgsNode) visit(ctx.args()));
+    return new NEWNode(new IDNode(ctx.ID().getText()), (ArgsNode) visit(ctx.args()));
   }
 
   @Override
@@ -104,8 +106,8 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitOBJMEM(CppParser.OBJMEMContext ctx) {
-    IDNode idNode = (IDNode) visit(ctx.ID());
-    List<ObjcallNode> objcalls = new ArrayList<ObjcallNode>();
+    IDNode idNode = new IDNode(ctx.ID().getText());
+    List<ObjcallNode> objcalls = new ArrayList<>();
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
@@ -144,9 +146,9 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
       objcalls.add((ObjcallNode) visit(objcall));
     }
     if (ctx.args() != null) {
-      return new FNCALLNode(objcalls, (IDNode) visit(ctx.ID()), (ArgsNode) visit(ctx.args()));
+      return new FNCALLNode(objcalls, new IDNode(ctx.ID().getText()), (ArgsNode) visit(ctx.args()));
     }
-    return new FNCALLNode(objcalls, (IDNode) visit(ctx.ID()), null);
+    return new FNCALLNode(objcalls, new IDNode(ctx.ID().getText()), null);
   }
 
   @Override
@@ -158,7 +160,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   public ASTNode visitClassDef(CppParser.ClassDefContext ctx) {
     List<ASTNode> classmembers = new ArrayList<>();
     for (var classmember : ctx.classMember()) {
-      classmembers.add((ASTNode) visit(classmember));
+      classmembers.add(visit(classmember));
     }
     if (ctx.pName != null) {
       return new ClassDefNode(
@@ -213,69 +215,115 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   @Override
   public ASTNode visitObjcall(CppParser.ObjcallContext ctx) {
     if (ctx.args() == null) {
-      return new ObjcallNode((IDNode) visit(ctx.ID()), null);
+      return new ObjcallNode(new IDNode(ctx.ID().getText()), null);
     }
-    return new ObjcallNode((IDNode) visit(ctx.ID()), (ArgsNode) visit(ctx.args()));
+    return new ObjcallNode(new IDNode(ctx.ID().getText()), (ArgsNode) visit(ctx.args()));
   }
 
   @Override
   public ASTNode visitVardecl(CppParser.VardeclContext ctx) {
-    return super.visitVardecl(ctx);
+    if (ctx.expr() != null) {
+      return new VardeclNode(
+          (TypeNode) visit(ctx.type()),
+          (IdentifierNode) visit(ctx.identifier()),
+          (ExprNode) visit(ctx.expr()));
+    }
+    return new VardeclNode(
+        (TypeNode) visit(ctx.type()), (IdentifierNode) visit(ctx.identifier()), null);
   }
 
   @Override
   public ASTNode visitConstructorCall(CppParser.ConstructorCallContext ctx) {
-    return super.visitConstructorCall(ctx);
+    if (ctx.args() != null) {
+      return new ConstructorCallNode(
+          new IDNode(ctx.cName.getText()),
+          new IDNode(ctx.objName.getText()),
+          (ArgsNode) visit(ctx.args()));
+    }
+    return new ConstructorCallNode(
+        new IDNode(ctx.cName.getText()), new IDNode(ctx.objName.getText()), null);
   }
 
   @Override
   public ASTNode visitFndecl(CppParser.FndeclContext ctx) {
-    return super.visitFndecl(ctx);
+    ParamlistNode paramlistNode = null;
+    TypeNode typeNode = null;
+    if (ctx.paramlist() != null) {
+      paramlistNode = (ParamlistNode) visit(ctx.paramlist());
+    }
+    if (ctx.type() != null) {
+      typeNode = (TypeNode) visit(ctx.type());
+    }
+    else {
+      typeNode = new TypeNode(Type.VOID);
+    }
+    return new FndeclNode(typeNode, new IDNode(ctx.ID().getText()), paramlistNode);
   }
 
   @Override
   public ASTNode visitConstructor(CppParser.ConstructorContext ctx) {
-    return super.visitConstructor(ctx);
+    if (ctx.paramlist() != null) {
+      return new ConstructorNode(
+          new IDNode(ctx.ID().getText()),
+          (ParamlistNode) visit(ctx.paramlist()),
+          (BlockNode) visit(ctx.block()));
+    }
+    return new ConstructorNode(
+        new IDNode(ctx.ID().getText()), null, (BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitReturn(CppParser.ReturnContext ctx) {
-    return super.visitReturn(ctx);
+    if (ctx.expr() != null) {
+      return new ReturnNode((ExprNode) visit(ctx.expr()));
+    }
+    return new ReturnNode(null);
   }
 
   @Override
   public ASTNode visitFndef(CppParser.FndefContext ctx) {
-    return super.visitFndef(ctx);
+    return new FndefNode((FndeclNode) visit(ctx.fndecl()), (BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitOverrideFndef(CppParser.OverrideFndefContext ctx) {
-    return super.visitOverrideFndef(ctx);
+    return new OverrideFndefNode((FndeclNode) visit(ctx.fndecl()), (BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitPbool(CppParser.PboolContext ctx) {
-    return super.visitPbool(ctx);
+    return new PrintNode((ExprNode) visit(ctx.expr()), Type.BOOL);
   }
 
   @Override
   public ASTNode visitPint(CppParser.PintContext ctx) {
-    return super.visitPint(ctx);
+    return new PrintNode((ExprNode) visit(ctx.expr()), Type.INT);
   }
 
   @Override
   public ASTNode visitPchar(CppParser.PcharContext ctx) {
-    return super.visitPchar(ctx);
+    return new PrintNode((ExprNode) visit(ctx.expr()), Type.CHAR);
   }
 
   @Override
   public ASTNode visitWhile(CppParser.WhileContext ctx) {
-    return super.visitWhile(ctx);
+    return new WhileNode((ExprNode) visit(ctx.expr()), (BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitIf(CppParser.IfContext ctx) {
-    return super.visitIf(ctx);
+    List<ElseifNode> elseifs = new ArrayList<>();
+    for (var elseif : ctx.elseif()) {
+      elseifs.add((ElseifNode) visit(elseif));
+    }
+    if (ctx.else_() != null) {
+      return new IfNode(
+          (ExprNode) visit(ctx.expr()),
+          (BlockNode) visit(ctx.block()),
+          elseifs,
+          (ElseNode) visit(ctx.else_()));
+    }
+    return new IfNode((ExprNode) visit(ctx.expr()), (BlockNode) visit(ctx.block()), elseifs, null);
   }
 
   @Override
@@ -285,66 +333,102 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitElseif(CppParser.ElseifContext ctx) {
-    return super.visitElseif(ctx);
+    return new ElseifNode((ExprNode) visit(ctx.expr()), (BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitElse(CppParser.ElseContext ctx) {
-    return super.visitElse(ctx);
+    return new ElseNode((BlockNode) visit(ctx.block()));
   }
 
   @Override
   public ASTNode visitIdentifier(CppParser.IdentifierContext ctx) {
-    return super.visitIdentifier(ctx);
+    // Contains "[" -> is an array
+    if (!ctx.LEFTBRACKET().isEmpty()) {
+      List<ExprNode> sizes = new ArrayList<>();
+      for (var expr : ctx.expr()) {
+        sizes.add((ExprNode) visit(expr));
+      }
+
+      return new IdentifierNode(
+          new IDNode(ctx.ID().getText()),
+          sizes,
+          ctx.LEFTBRACKET().size(),
+          ctx.getChild(1).getText().equals("&"));
+    }
+    return new IdentifierNode(
+        new IDNode(ctx.ID().getText()), ctx.getChild(0).getText().equals("&"));
   }
 
   @Override
   public ASTNode visitPREINC(CppParser.PREINCContext ctx) {
-      return new IncDecNode((IDNode) visit(ctx.ID()),true,true);
+    return new IncDecNode(new IDNode(ctx.ID().getText()), true, true);
   }
 
   @Override
   public ASTNode visitPREDEC(CppParser.PREDECContext ctx) {
-      return new IncDecNode((IDNode) visit(ctx.ID()),false,true);
+    return new IncDecNode(new IDNode(ctx.ID().getText()), false, true);
   }
 
   @Override
   public ASTNode visitPOSTINC(CppParser.POSTINCContext ctx) {
-      return new IncDecNode((IDNode) visit(ctx.ID()),true,false);
+    return new IncDecNode(new IDNode(ctx.ID().getText()), true, false);
   }
 
   @Override
   public ASTNode visitPOSTDEC(CppParser.POSTDECContext ctx) {
-    return new IncDecNode((IDNode) visit(ctx.ID()),false,false);
+    return new IncDecNode(new IDNode(ctx.ID().getText()), false, false);
   }
 
   @Override
   public ASTNode visitArgs(CppParser.ArgsContext ctx) {
-    return super.visitArgs(ctx);
+    List<ExprNode> arguments = new ArrayList<>();
+    for (var expr : ctx.expr()) {
+      arguments.add((ExprNode) visit(expr));
+    }
+    return new ArgsNode(arguments);
   }
 
   @Override
   public ASTNode visitParamlist(CppParser.ParamlistContext ctx) {
-    return super.visitParamlist(ctx);
+    List<ParamNode> params = new ArrayList<>();
+    for (var param : ctx.param()) {
+      params.add((ParamNode) visit(param));
+    }
+    return new ParamlistNode(params);
   }
 
   @Override
   public ASTNode visitParam(CppParser.ParamContext ctx) {
-    return super.visitParam(ctx);
+    return new ParamNode((TypeNode) visit(ctx.type()), (IdentifierNode) visit(ctx.identifier()));
   }
 
   @Override
   public ASTNode visitBlock(CppParser.BlockContext ctx) {
-    return super.visitBlock(ctx);
+    BlockNode block = new BlockNode();
+    for (var child : ctx.stmt()) {
+      block.addChild(visit(child));
+    }
+    return block;
   }
 
   @Override
   public ASTNode visitType(CppParser.TypeContext ctx) {
-    return super.visitType(ctx);
+    if (ctx.TYPEINT() != null) {
+      return new TypeNode(Type.INT);
+    }
+    if (ctx.TYPECHAR() != null) {
+      return new TypeNode(Type.CHAR);
+    }
+    if (ctx.TYPEBOOL() != null) {
+      return new TypeNode(Type.BOOL);
+    }
+    return new TypeNode(ctx.ID().getText());
   }
 
   @Override
   public ASTNode visitAssignop(CppParser.AssignopContext ctx) {
+    // This method has no content and purpose
     return super.visitAssignop(ctx);
   }
 }

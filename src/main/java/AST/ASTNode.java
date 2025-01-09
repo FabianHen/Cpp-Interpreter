@@ -23,4 +23,9 @@ public abstract class ASTNode {
   }
 
   public abstract <T> T accept(ASTVisitor<T> visitor);
+
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
+  }
 }

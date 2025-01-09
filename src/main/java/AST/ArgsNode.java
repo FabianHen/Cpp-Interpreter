@@ -2,7 +2,7 @@ package AST;
 
 import java.util.*;
 
-public class ArgsNode extends ASTNode {
+public class ArgsNode extends ExprNode {
   // Fields
   private List<ExprNode> arguments;
 

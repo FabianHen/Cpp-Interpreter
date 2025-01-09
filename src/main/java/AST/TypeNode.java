@@ -33,4 +33,9 @@ public class TypeNode extends ASTNode {
   public <T> T accept(ASTVisitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + " " + (type == Type.CUSTOM ? className : type.toString());
+  }
 }

@@ -2,7 +2,7 @@ grammar Cpp;
 
 //Parser Rules
 program
-    :   (stmt | expr ';')* EOF
+    :   (stmt)* EOF
     ;
 
 stmt
@@ -16,12 +16,11 @@ stmt
     |   print ';'
     |   while
     |   if
+    |   expr ';'
     ;
 
 expr
-    :   objcall* ID '(' args? ')'   #FNCALL
-    |   objcall* ID                 #OBJMEM
-    |   'new' ID  '(' args? ')'     #NEW
+    :   'new' ID  '(' args? ')'     #NEW
     |   '(' expr ')'                #COL
     |   e1 = expr '*' e2 = expr     #MUL
     |   e1 = expr '/' e2 = expr     #DIV
@@ -35,7 +34,7 @@ expr
     |   e1 = expr '<=' e2 = expr    #LEAQUALS
     |   e1 = expr '&&' e2 =expr     #AND
     |   e1 = expr '||' e2 =expr     #OR
-    |   expr ('[' expr ']')+        #ARRACC
+    |   expr (LEFTBRACKET expr RIGHTBRACKET)+        #ARRACC
     |   '{'args'}'                  #ARRVALS
     |   incDec                      #INCDECWRAP
     |   expr '.'                    #OBJ
@@ -44,6 +43,8 @@ expr
     |   CHAR                        #CHAR
     |   INT                         #INT
     |   ID                          #ID
+    |   objcall* ID '(' args? ')'   #FNCALL
+    |   objcall* ID                 #OBJMEM
     ;
 
 // STMT
@@ -132,8 +133,8 @@ else
 //HELP
 identifier
     :   '&'? ID
-    |   '(' '&' ID ')' ('[' expr? ']')+
-    |   ID ('[' expr? ']')+
+    |   '(' '&' ID ')' (LEFTBRACKET expr? RIGHTBRACKET)+
+    |   ID (LEFTBRACKET expr? RIGHTBRACKET)+
     ;
 incDec
     :   '++' ID     #PREINC
@@ -155,7 +156,7 @@ param
     ;
 
 block
-    :   '{' (stmt|expr ';')* '}'
+    :   '{' (stmt)* '}'
     ;
 
 type
@@ -191,6 +192,9 @@ BOOL
     :   'true'
     |   'false'
     ;
+
+LEFTBRACKET: '[';
+RIGHTBRACKET: ']';
 
 ID  :   [a-zA-Z][a-zA-Z0-9_]*;
 WS  :   [ \t\n\r]+ -> skip;

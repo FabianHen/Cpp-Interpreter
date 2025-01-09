@@ -62,4 +62,13 @@ public class IdentifierNode extends ASTNode {
   public <T> T accept(ASTVisitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(getClass().getSimpleName());
+    sb.append((isReference ? "&" : "") + " ");
+    sb.append(dimension);
+    return sb.toString();
+  }
 }
