@@ -58,6 +58,7 @@ classMember
     |   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
     |   vardecl ';'
     |   overrideFndef
+    |   constructor
     ;
 
 destructor
@@ -81,8 +82,11 @@ constructorCall
     ;
 
 fndecl
-    :   (type | 'void')? ID '(' (paramlist)? ')'
+    :   (type | 'void') ID '(' (paramlist)? ')'
     ;
+    
+constructor
+    :   ID '(' (paramlist)? ')' block;
 
 return
     :   'return' expr?
