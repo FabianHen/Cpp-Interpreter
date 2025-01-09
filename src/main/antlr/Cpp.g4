@@ -58,6 +58,7 @@ classMember
     |   virtual
     |   vardecl ';'
     |   overrideFndef
+    |   constructor
     ;
 
 overrideFndecl
@@ -88,8 +89,11 @@ constructorCall
     ;
 
 fndecl
-    :   (type | 'void')? ID '(' (paramlist)? ')'
+    :   (type | 'void') ID '(' (paramlist)? ')'
     ;
+    
+constructor
+    :   ID '(' (paramlist)? ')' block;
 
 return
     :   'return' expr?

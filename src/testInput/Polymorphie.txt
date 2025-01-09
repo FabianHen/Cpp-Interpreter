@@ -1,0 +1,42 @@
+class Vehicle {
+    Vehicle(){}
+    
+    virtual void startEngine() = 0;
+    virtual void stopEngine() = 0;
+};
+
+class Car_1 : Vehicle {
+    void startEngine() override {
+        print_char('C');  // Zeige an, dass der Motor gestartet wurde
+    }
+
+    void stopEngine() override {
+        print_char('S');  // Zeige an, dass der Motor gestoppt wurde
+    }
+};
+class Car_2 : Vehicle {
+    void startEngine() override {
+        print_char('C');  // Zeige an, dass der Motor gestartet wurde
+    }
+
+    void stopEngine() override {
+        print_char('S');  // Zeige an, dass der Motor gestoppt wurde
+    }
+};
+
+Car myCar;
+print_int(1);
+print_char('\n');
+myCar.startEngine();  // Ausgabe: 'C'
+myCar.stopEngine();   // Ausgabe: 'S'
+
+print_char('\n');
+print_int(2);
+Car myCar2 = new Car();
+myCar2.startEngine();
+myCar2.stopEngine();
+
+Car myCar3 = myCar2;
+print_char('\n');
+print_int(3);
+myCar3.startEngine();
