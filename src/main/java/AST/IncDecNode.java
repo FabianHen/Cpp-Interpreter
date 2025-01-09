@@ -11,28 +11,19 @@ public class IncDecNode extends ASTNode {
         this.id = id;
         this.isInc = isInc;
         this.isPre = isPre;
+
+        addChild(id);
     }
 
     // Getters and Setters
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-
     public boolean isInc() {
         return isInc;
     }
-    public void setInc(boolean inc) {
-        isInc = inc;
-    }
-
     public boolean isPre() {
         return isPre;
-    }
-    public void setPre(boolean pre) {
-        isPre = pre;
     }
 
     @Override

@@ -12,22 +12,17 @@ public class ARRACCNode extends ExprNode {
         super();
         this.expr = expr;
         this.indices = indices;
+        addChild(expr);
+        for (ExprNode child : indices) {
+            addChild(child);
+        }
     }
 
     // Getters and Setters
     public ExprNode getExpr() {
         return this.expr;
     }
-    public void setExpr(ExprNode expr) {
-        this.expr = expr;
-    }
 
-    public void setIndices(List<ExprNode> indices) {
-        this.indices = indices;
-    }
-    public void addExprNode(ExprNode indice) {
-        this.indices.add(indice);
-    }
     public List<ExprNode> getIndices() {
         return this.indices;
     }

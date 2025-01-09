@@ -10,13 +10,12 @@ public class NOTNode extends ExprNode {
     public NOTNode(ExprNode expr) {
         super();
         this.expr = expr;
+
+        addChild(expr);
     }
     // Getters and Setters
     public ExprNode getExpr() {
         return this.expr;
-    }
-    public void setExpr(ExprNode expr) {
-        this.expr = expr;
     }
 
     @Override

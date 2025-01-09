@@ -16,41 +16,29 @@ public class BindingNode extends ASTNode {
         this.id = id;
         this.assignop = assignop;
         this.expr = expr;
+
+        for (ObjcallNode child : objcalls) {
+            addChild(child);
+        }
+        addChild(id);
+        addChild(expr);
     }
 
     // Getters and Setters
     public ObjcallNode getObjcall(int index) {
         return this.objcalls.get(index);
     }
-    public void addObjcall(ObjcallNode objcall) {
-        this.objcalls.add(objcall);
-    }
     public List<ObjcallNode> getObjcalls() {
         return this.objcalls;
     }
-    public void setObjcalls(List<ObjcallNode> objcalls) {
-        this.objcalls = objcalls;
-    }
-    
     public IdentifierNode getId() {
         return this.id;
     }
-    public void setId(IdentifierNode id) {
-        this.id = id;
-    }
-    
     public String getAssignop() {
         return this.assignop;
     }
-    public void setAssignop(String assignop) {
-        this.assignop = assignop;
-    }
-    
     public ExprNode getExpr() {
         return this.expr;
-    }
-    public void setExpr(ExprNode expr) {
-        this.expr = expr;
     }
 
     @Override

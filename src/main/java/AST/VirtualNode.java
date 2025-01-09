@@ -14,6 +14,16 @@ public class VirtualNode extends ASTNode {
         this.intValue = intValue;
         this.isAbstract = isAbstract;
         this.fndef = fndef;
+
+        if (fndecl != null) {
+            addChild(fndecl);
+        }
+        if (fndef != null) {
+            addChild(fndef);
+        }
+        if (intValue != null) {
+            addChild(intValue);
+        }
     }
 
     // Getters and Setters
@@ -21,29 +31,15 @@ public class VirtualNode extends ASTNode {
     public FndeclNode getFndecl() {
         return this.fndecl;
     }
-    public void setFndecl(FndeclNode fndecl) {
-        this.fndecl = fndecl;
-    }
-
     public INTNode getIntvalue() {
         return this.intValue;
     }
-    public void setIntvalue(INTNode intValue) {
-        this.intValue = intValue;
-    }
-
     public boolean isAbstract() {
         return this.isAbstract;
     }
-    public void setIsAbstract(boolean isAbstract) {
-        this.isAbstract = isAbstract;
-    }
-
+    public void setAbstract(boolean isAbstract) { this.isAbstract = isAbstract; }
     public FndefNode getFndef() {
         return this.fndef;
-    }
-    public void setFndef(FndefNode fndef) {
-        this.fndef = fndef;
     }
 
     @Override

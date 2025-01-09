@@ -12,6 +12,9 @@ public class OverrideFndefNode extends ASTNode {
         super();
         this.fndecl = fndecl;
         this.block = block;
+
+        addChild(fndecl);
+        addChild(block);
     }
 
     // Getters and Setters
@@ -19,15 +22,8 @@ public class OverrideFndefNode extends ASTNode {
     public FndeclNode getFndecl() {
         return this.fndecl;
     }
-    public void setFndecl(FndeclNode fndecl) {
-        this.fndecl = fndecl;
-    }
-
     public BlockNode getBlock() {
         return this.block;
-    }
-    public void setBlock(BlockNode block) {
-        this.block = block;
     }
 
     @Override

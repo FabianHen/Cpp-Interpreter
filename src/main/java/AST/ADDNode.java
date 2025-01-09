@@ -12,21 +12,16 @@ public class ADDNode extends ExprNode {
         super();
         this.e1 = e1;
         this.e2 = e2;
+        addChild(e1);
+        addChild(e2);
     }
 
     // Getters and Setters
     public ExprNode getE1() {
         return this.e1;
     }
-    public void setE1(ExprNode e1) {
-        this.e1 = e1;
-    }
-    
     public ExprNode getE2() {
         return this.e2;
-    }
-    public void setE2(ExprNode e2) {
-        this.e2 = e2;
     }
 
     @Override

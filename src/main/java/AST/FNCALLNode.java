@@ -14,31 +14,25 @@ public class FNCALLNode extends ExprNode {
         this.objcalls = objcalls;
         this.id = id;
         this.args = args;
+
+        for (ObjcallNode child : objcalls) {
+            addChild(child);
+        }
+        addChild(id);
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     // Getters and Setters
-    public void setObjcalls(List<ObjcallNode> objcalls) {
-        this.objcalls = objcalls;
-    }
-    public void addObjcallNode(ObjcallNode objcall) {
-        this.objcalls.add(objcall);
-    }
     public List<ObjcallNode> getObjcalls() {
         return this.objcalls;
     }
     public ObjcallNode getObjcallNode(int index) {
         return this.objcalls.get(index);
     }
-    
     public IDNode getId() {
         return this.id;
-    }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-    
-    public void setArgs(ArgsNode args) {
-        this.args = args;
     }
     public ArgsNode getArgs() {
         return this.args;

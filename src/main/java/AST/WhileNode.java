@@ -12,21 +12,17 @@ public class WhileNode extends ASTNode {
         super();
         this.condition = condition;
         this.block = block;
+
+        addChild(condition);
+        addChild(block);
     }
 
     // Getters and Setters
     public ExprNode getCondition() {
         return this.condition;
     }
-    public void setCondition(ExprNode condition) {
-        this.condition = condition;
-    }
-
     public BlockNode getBlock() {
         return this.block;
-    }
-    public void setBlock(BlockNode block) {
-        this.block = block;
     }
 
     @Override

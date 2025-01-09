@@ -12,27 +12,22 @@ public class OBJMEMNode extends ExprNode {
         super();
         this.objcalls = objcalls;
         this.id = id;
+
+        for (ObjcallNode child : objcalls) {
+            addChild(child);
+        }
+        addChild(id);
     }
 
     // Getters and Setters
-    public void setObjcalls(List<ObjcallNode> objcalls) {
-        this.objcalls = objcalls;
-    }
-    public void addObjcallNode(ObjcallNode objcall) {
-        this.objcalls.add(objcall);
-    }
     public List<ObjcallNode> getObjcalls() {
         return this.objcalls;
     }
     public ObjcallNode getObjcallNode(int index) {
         return this.objcalls.get(index);
     }
-    
     public IDNode getId() {
         return this.id;
-    }
-    public void setId(IDNode id) {
-        this.id = id;
     }
 
     @Override

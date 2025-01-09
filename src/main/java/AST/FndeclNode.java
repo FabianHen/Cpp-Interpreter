@@ -12,28 +12,23 @@ public class FndeclNode extends ASTNode {
         this.returnType = returnType;
         this.id = id;
         this.paramlist = paramlist;
+
+        addChild(returnType);
+        addChild(id);
+        if (paramlist != null) {
+            addChild(paramlist);
+        }
     }
 
     // Getters and Setters
     public TypeNode getReturntype() {
         return this.returnType;
     }
-    public void setReturntype(TypeNode returnType) {
-        this.returnType = returnType;
-    }
-    
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-
     public ParamlistNode getParamlist() {
         return this.paramlist;
-    }
-    public void setParamlist(ParamlistNode paramlist) {
-        this.paramlist = paramlist;
     }
 
     @Override

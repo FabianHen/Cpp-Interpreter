@@ -10,15 +10,12 @@ public class ArgsNode extends ASTNode {
     public ArgsNode(List<ExprNode> arguments) {
         super();
         this.arguments = arguments;
+        for(var child : arguments) {
+            addChild(child);
+        }
     }
 
     // Getters and Setters
-    public void setArguments(List<ExprNode> arguments) {
-        this.arguments = arguments;
-    }
-    public void addExprNode(ExprNode argument) {
-        this.arguments.add(argument);
-    }
     public List<ExprNode> getArguments() {
         return this.arguments;
     }

@@ -5,13 +5,18 @@ import java.util.*;
 public class NEWNode extends ExprNode {
     // Fields
     private IDNode id;
-    private List<ArgsNode> args;
+    private ArgsNode args;
 
     // Constructor
-    public NEWNode(IDNode id, List<ArgsNode> args) {
+    public NEWNode(IDNode id, ArgsNode args) {
         super();
         this.id = id;
         this.args = args;
+
+        addChild(id);
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     // Getters and Setters
@@ -19,21 +24,8 @@ public class NEWNode extends ExprNode {
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-    
-    public void setArgs(List<ArgsNode> args) {
-        this.args = args;
-    }
-    public void addArgsNode(ArgsNode arg) {
-        this.args.add(arg);
-    }
-    public List<ArgsNode> getArgs() {
-        return this.args;
-    }
-    public ArgsNode getArgsNode(int index) {
-        return this.args.get(index);
+    public ArgsNode getArgs() {
+        return args;
     }
 
     @Override

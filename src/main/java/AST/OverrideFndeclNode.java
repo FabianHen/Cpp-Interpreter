@@ -12,21 +12,16 @@ public class OverrideFndeclNode extends ASTNode {
         super();
         this.fndecl = fndecl;
         this.isOverride = isOverride;
+
+        addChild(fndecl);
     }
 
     // Getters and Setters
     public FndeclNode getFndecl() {
         return this.fndecl;
     }
-    public void setFndecl(FndeclNode fndecl) {
-        this.fndecl = fndecl;
-    }
-
     public boolean getIsoverride() {
         return this.isOverride;
-    }
-    public void setIsoverride(boolean isOverride) {
-        this.isOverride = isOverride;
     }
 
     @Override

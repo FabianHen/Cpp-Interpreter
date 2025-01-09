@@ -14,28 +14,23 @@ public class VardeclNode extends ASTNode {
         this.type = type;
         this.identifier = identifier;
         this.expr = expr;
+
+        addChild(type);
+        addChild(identifier);
+        if (expr != null) {
+            addChild(expr);
+        }
     }
 
     // Getters and Setters
     public TypeNode getType() {
         return this.type;
     }
-    public void setType(TypeNode type) {
-        this.type = type;
-    }
-    
     public IdentifierNode getIdentifier() {
         return this.identifier;
     }
-    public void setIdentifier(IdentifierNode identifier) {
-        this.identifier = identifier;
-    }
-
     public ExprNode getExpr() {
         return this.expr;
-    }
-    public void setExpr(ExprNode expr) {
-        this.expr = expr;
     }
 
     @Override

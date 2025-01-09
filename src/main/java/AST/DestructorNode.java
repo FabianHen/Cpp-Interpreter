@@ -4,28 +4,27 @@ public class DestructorNode extends ASTNode {
     // Fields
     private IDNode id;
     private BlockNode block;
+    private boolean isVirtual;
 
     // Constructor
-    public DestructorNode(IDNode id, BlockNode block) {
+    public DestructorNode(IDNode id, BlockNode block, boolean isVirtual) {
         super();
         this.id = id;
         this.block = block;
+        this.isVirtual = isVirtual;
+
+        addChild(id);
+        addChild(block);
     }
 
     // Getters and Setters
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-    
     public BlockNode getBlock() {
         return this.block;
     }
-    public void setBlock(BlockNode block) {
-        this.block = block;
-    }
+    public boolean isVirtual() { return this.isVirtual; }
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {

@@ -9,20 +9,18 @@ public class ObjcallNode extends ASTNode {
         super();
         this.id = id;
         this.args = args;
+
+        addChild(id);
+        if(args != null) {
+            addChild(args);
+        }
     }
     // Getters and Setters
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-    
     public ArgsNode getArgs() {
         return this.args;
-    }
-    public void setArgs(ArgsNode args) {
-        this.args = args;
     }
 
     @Override

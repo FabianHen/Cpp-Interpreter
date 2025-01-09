@@ -12,21 +12,17 @@ public class ParamNode extends ASTNode {
         super();
         this.type = type;
         this.identifier = identifier;
+
+        addChild(type);
+        addChild(identifier);
     }
 
     // Getters and Setters
     public TypeNode getType() {
         return this.type;
     }
-    public void setType(TypeNode type) {
-        this.type = type;
-    }
-
     public IdentifierNode getIdentifier() {
         return this.identifier;
-    }
-    public void setIdentifier(IdentifierNode identifier) {
-        this.identifier = identifier;
     }
 
     @Override

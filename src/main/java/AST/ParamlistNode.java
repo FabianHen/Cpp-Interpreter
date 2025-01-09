@@ -10,15 +10,13 @@ public class ParamlistNode extends ASTNode {
     public ParamlistNode(List<ParamNode> params) {
         super();
         this.params = params;
+
+        for (ParamNode child : params) {
+            addChild(child);
+        }
     }
 
     // Getters and Setters
-    public void setParams(List<ParamNode> params) {
-        this.params = params;
-    }
-    public void addParamNode(ParamNode param) {
-        this.params.add(param);
-    }
     public List<ParamNode> getParams() {
         return this.params;
     }

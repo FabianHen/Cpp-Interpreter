@@ -14,28 +14,23 @@ public class ConstructorNode extends ASTNode {
         this.id = id;
         this.paramlist = paramlist;
         this.block = block;
+
+        addChild(id);
+        if (paramlist != null) {
+            addChild(paramlist);
+        }
+        addChild(block);
     }
 
     // Getters and Setters
     public IDNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
-        this.id = id;
-    }
-
     public ParamlistNode getParamlist() {
         return this.paramlist;
     }
-    public void setParamlist(ParamlistNode paramlist) {
-        this.paramlist = paramlist;
-    }
-
     public BlockNode getBlock() {
         return this.block;
-    }
-    public void setBlock(BlockNode block) {
-        this.block = block;
     }
 
     @Override

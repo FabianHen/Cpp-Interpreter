@@ -16,28 +16,24 @@ public class IfNode extends ASTNode {
         this.block = block;
         this.elseifBlocks = elseifBlocks;
         this.elseBlock = elseBlock;
+
+        addChild(condition);
+        addChild(block);
+
+        for(ElseifNode elseifBlock : elseifBlocks) {
+            addChild(elseifBlock);
+        }
+        if(elseBlock != null) {
+            addChild(elseBlock);
+        }
     }
 
     // Getters and Setters
     public ExprNode getCondition() {
         return this.condition;
     }
-    public void setCondition(ExprNode condition) {
-        this.condition = condition;
-    }
-
     public BlockNode getBlock() {
         return this.block;
-    }
-    public void setBlock(BlockNode block) {
-        this.block = block;
-    }
-    
-    public void setElseifblocks(List<ElseifNode> elseifBlocks) {
-        this.elseifBlocks = elseifBlocks;
-    }
-    public void addElseifNode(ElseifNode elseifBlock) {
-        this.elseifBlocks.add(elseifBlock);
     }
     public List<ElseifNode> getElseifblocks() {
         return this.elseifBlocks;
@@ -49,10 +45,6 @@ public class IfNode extends ASTNode {
     public ElseNode getElseblock() {
         return this.elseBlock;
     }
-    public void setElseblock(ElseNode elseBlock) {
-        this.elseBlock = elseBlock;
-    }
-
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {

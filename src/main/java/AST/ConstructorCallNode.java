@@ -12,28 +12,24 @@ public class ConstructorCallNode extends ASTNode {
         this.typeName = typeName;
         this.instanceName = instanceName;
         this.args = args;
+
+        addChild(typeName);
+        addChild(instanceName);
+        if (args == null) return;
+        addChild(args);
     }
 
     // Getters and Setters
     public IDNode getTypename() {
         return this.typeName;
     }
-    public void setTypename(IDNode typeName) {
-        this.typeName = typeName;
-    }
 
     public IDNode getInstancename() {
         return this.instanceName;
     }
-    public void setInstancename(IDNode instanceName) {
-        this.instanceName = instanceName;
-    }
 
     public ArgsNode getArgs() {
         return this.args;
-    }
-    public void setArgs(ArgsNode args) {
-        this.args = args;
     }
 
     @Override
