@@ -1,9 +1,9 @@
 package AST;
 
 public enum Type {
-    INT,
-    CHAR,
-    BOOL,
-    VOID,
-    CUSTOM
+  INT,
+  CHAR,
+  BOOL,
+  VOID,
+  CUSTOM
 }

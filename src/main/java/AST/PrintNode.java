@@ -3,27 +3,30 @@ package AST;
 import java.util.*;
 
 public class PrintNode extends ASTNode {
-    // Fields
-    private ExprNode expr;
-    private Type type;
+  // Fields
+  private ExprNode expr;
+  private Type type;
 
-    // Constructor
-    public PrintNode(ExprNode expr, Type type) {
-        super();
-        this.expr = expr;
-        this.type = type;
+  // Constructor
+  public PrintNode(ExprNode expr, Type type) {
+    super();
+    this.expr = expr;
+    this.type = type;
 
-        addChild(expr);
-    }
+    addChild(expr);
+  }
 
-    // Getters and Setters
-    public ExprNode getExpr() {
-        return this.expr;
-    }
-    public Type getType() {return this.type;}
+  // Getters and Setters
+  public ExprNode getExpr() {
+    return this.expr;
+  }
 
-    @Override
-    public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+  public Type getType() {
+    return this.type;
+  }
+
+  @Override
+  public <T> T accept(ASTVisitor<T> visitor) {
+    return visitor.visit(this);
+  }
 }

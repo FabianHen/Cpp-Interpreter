@@ -161,9 +161,10 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
       classmembers.add((ASTNode) visit(classmember));
     }
     if (ctx.pName != null) {
-      return new ClassDefNode(new IDNode(ctx.cName.getText()),new IDNode(ctx.pName.getText()),classmembers);
+      return new ClassDefNode(
+          new IDNode(ctx.cName.getText()), new IDNode(ctx.pName.getText()), classmembers);
     }
-    return new ClassDefNode(new IDNode(ctx.cName.getText()),null,classmembers);
+    return new ClassDefNode(new IDNode(ctx.cName.getText()), null, classmembers);
   }
 
   @Override
@@ -173,34 +174,48 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitOverrideFndecl(CppParser.OverrideFndeclContext ctx) {
-    return new OverrideFndeclNode((FndeclNode) visit(ctx.fndecl()),ctx.getChildCount() > 1);
+    return new OverrideFndeclNode((FndeclNode) visit(ctx.fndecl()), ctx.getChildCount() > 1);
   }
 
   @Override
   public ASTNode visitVirtual(CppParser.VirtualContext ctx) {
-    if(ctx.getChildCount() == 2){
-      return new VirtualNode(null,null, false, (FndefNode) visit(ctx.fndef()));
+    if (ctx.getChildCount() == 2) {
+      return new VirtualNode(null, -1, false, (FndefNode) visit(ctx.fndef()));
     }
-    if(ctx.INT() != null){
-      //TODO change intValue to type int
-      return new VirtualNode((FndeclNode) visit(ctx.fndecl()),new INTNode(Integer.parseInt(ctx.INT().getText())), true, null);
+    if (ctx.INT() != null) {
+      return new VirtualNode(
+          (FndeclNode) visit(ctx.fndecl()), Integer.parseInt(ctx.INT().getText()), true, null);
     }
-    return new VirtualNode((FndeclNode) visit(ctx.fndecl()),null, false, null);
+    return new VirtualNode((FndeclNode) visit(ctx.fndecl()), -1, false, null);
   }
 
   @Override
   public ASTNode visitDestructor(CppParser.DestructorContext ctx) {
-    return super.visitDestructor(ctx);
+    return new DestructorNode(
+        new IDNode(ctx.ID().getText()),
+        (BlockNode) visit(ctx.block()),
+        ctx.getChild(0).getText().equals("virtual"));
   }
 
   @Override
   public ASTNode visitBinding(CppParser.BindingContext ctx) {
-    return super.visitBinding(ctx);
+    List<ObjcallNode> objcalls = new ArrayList<>();
+    for (var objcall : ctx.objcall()) {
+      objcalls.add((ObjcallNode) visit(objcall));
+    }
+    return new BindingNode(
+        objcalls,
+        (IdentifierNode) visit(ctx.identifier()),
+        ctx.assignop().getChild(0).getText(),
+        (ExprNode) visit(ctx.expr()));
   }
 
   @Override
   public ASTNode visitObjcall(CppParser.ObjcallContext ctx) {
-    return super.visitObjcall(ctx);
+    if (ctx.args() == null) {
+      return new ObjcallNode((IDNode) visit(ctx.ID()), null);
+    }
+    return new ObjcallNode((IDNode) visit(ctx.ID()), (ArgsNode) visit(ctx.args()));
   }
 
   @Override
@@ -285,22 +300,22 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitPREINC(CppParser.PREINCContext ctx) {
-    return super.visitPREINC(ctx);
+      return new IncDecNode((IDNode) visit(ctx.ID()),true,true);
   }
 
   @Override
   public ASTNode visitPREDEC(CppParser.PREDECContext ctx) {
-    return super.visitPREDEC(ctx);
+      return new IncDecNode((IDNode) visit(ctx.ID()),false,true);
   }
 
   @Override
   public ASTNode visitPOSTINC(CppParser.POSTINCContext ctx) {
-    return super.visitPOSTINC(ctx);
+      return new IncDecNode((IDNode) visit(ctx.ID()),true,false);
   }
 
   @Override
   public ASTNode visitPOSTDEC(CppParser.POSTDECContext ctx) {
-    return super.visitPOSTDEC(ctx);
+    return new IncDecNode((IDNode) visit(ctx.ID()),false,false);
   }
 
   @Override

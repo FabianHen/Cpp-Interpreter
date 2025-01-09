@@ -1,33 +1,36 @@
 package AST;
 
 public class IncDecNode extends ASTNode {
-    // Fields
-    private IDNode id;
-    private boolean isInc;
-    private boolean isPre;
-    // Constructor
-    public IncDecNode(IDNode id, boolean isInc, boolean isPre) {
-        super();
-        this.id = id;
-        this.isInc = isInc;
-        this.isPre = isPre;
+  // Fields
+  private IDNode id;
+  private boolean isInc;
+  private boolean isPre;
 
-        addChild(id);
-    }
+  // Constructor
+  public IncDecNode(IDNode id, boolean isInc, boolean isPre) {
+    super();
+    this.id = id;
+    this.isInc = isInc;
+    this.isPre = isPre;
 
-    // Getters and Setters
-    public IDNode getId() {
-        return this.id;
-    }
-    public boolean isInc() {
-        return isInc;
-    }
-    public boolean isPre() {
-        return isPre;
-    }
+    addChild(id);
+  }
 
-    @Override
-    public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+  // Getters and Setters
+  public IDNode getId() {
+    return this.id;
+  }
+
+  public boolean isInc() {
+    return isInc;
+  }
+
+  public boolean isPre() {
+    return isPre;
+  }
+
+  @Override
+  public <T> T accept(ASTVisitor<T> visitor) {
+    return visitor.visit(this);
+  }
 }

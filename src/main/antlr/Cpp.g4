@@ -37,7 +37,7 @@ expr
     |   e1 = expr '||' e2 =expr     #OR
     |   expr ('[' expr ']')+        #ARRACC
     |   '{'args'}'                  #ARRVALS
-    |   incDec                      #INCDEC
+    |   incDec                      #INCDECWRAP
     |   expr '.'                    #OBJ
     |   NOT expr                    #NOT
     |   BOOL                        #BOOL
@@ -48,7 +48,7 @@ expr
 
 // STMT
 classDef
-    :   'class' cName=ID (':' ID )? '{' classMember* '}'
+    :   'class' cName=ID (':' pName=ID )? '{' classMember* '}'
     ;
 
 classMember
@@ -85,7 +85,7 @@ vardecl
     ;
 
 constructorCall
-    :   ID ID '(' args? ')'
+    :   cName = ID objName = ID '(' args? ')'
     ;
 
 fndecl
