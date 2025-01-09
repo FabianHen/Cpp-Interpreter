@@ -1,0 +1,19 @@
+class Math {
+    Math(){}
+    ~Math(){}
+
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    int multiply(int a, int b) {
+        return a * b;
+    }
+};
+int main(){
+    Math math;
+    int sum = math.add(3, 5);       // Ergebnis: 8
+    int product = math.multiply(4, 7); // Ergebnis: 28
+    print_int(sum);
+    print_int(product);
+}
