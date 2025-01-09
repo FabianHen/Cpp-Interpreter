@@ -1,8 +1,23 @@
 package AST;
 
-public class INTNode extends ASTNode {
-    public INTNode(String value) {
-        super(value);
+import java.util.*;
+
+public class INTNode extends ExprNode {
+    // Fields
+    private int value;
+
+    // Constructor
+    public INTNode(int value) {
+        super();
+        this.value = value;
+    }
+
+    // Getters and Setters
+    public int getValue() {
+        return this.value;
+    }
+    public void setValue(int value) {
+        this.value = value;
     }
 
     @Override

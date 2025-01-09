@@ -52,20 +52,27 @@ classDef
     ;
 
 classMember
-    :   fndecl 'override'? ';'
+    :   overrideFndecl ';'
     |   fndef
     |   destructor
-    |   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
+    |   virtual
     |   vardecl ';'
     |   overrideFndef
     ;
 
+overrideFndecl
+    :   fndecl 'override'?
+    ;
+
+virtual
+    : 'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
+    ;
 destructor
     :   'virtual'? '~' ID '(' ')' block
     ;
 
 binding
-    :   (objcall)* ID assignop expr
+    :   (objcall)* identifier assignop expr
     ;
 
 objcall

@@ -1,8 +1,32 @@
 package AST;
 
-public class ANDNode extends ASTNode {
-    public ANDNode(String value) {
-        super(value);
+import java.util.*;
+
+public class ANDNode extends ExprNode {
+    // Fields
+    private ExprNode e1;
+    private ExprNode e2;
+
+    // Constructor
+    public ANDNode(ExprNode e1, ExprNode e2) {
+        super();
+        this.e1 = e1;
+        this.e2 = e2;
+    }
+
+    // Getters and Setters
+    public ExprNode getE1() {
+        return this.e1;
+    }
+    public void setE1(ExprNode e1) {
+        this.e1 = e1;
+    }
+
+    public ExprNode getE2() {
+        return this.e2;
+    }
+    public void setE2(ExprNode e2) {
+        this.e2 = e2;
     }
 
     @Override

@@ -1,8 +1,11 @@
 package AST;
 
+import java.util.*;
+
 public class BlockNode extends ASTNode {
-    public BlockNode(String value) {
-        super(value);
+    // Constructor
+    public BlockNode() {
+        super();
     }
 
     @Override

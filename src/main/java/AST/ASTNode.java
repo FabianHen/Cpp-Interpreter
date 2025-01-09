@@ -5,10 +5,8 @@ import java.util.List;
 
 public abstract class ASTNode {
     private final List<ASTNode> children;
-    private String value;
 
-    public ASTNode(String value) {
-        this.value = value;
+    public ASTNode() {
         children = new ArrayList<>();
     }
 
@@ -22,14 +20,6 @@ public abstract class ASTNode {
 
     public ASTNode getChild(int i) {
         return children.get(i);
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 
     public abstract <T> T accept(ASTVisitor<T> visitor);

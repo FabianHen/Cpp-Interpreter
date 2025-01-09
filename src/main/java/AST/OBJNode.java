@@ -1,8 +1,21 @@
 package AST;
 
-public class OBJNode extends ASTNode {
-    public OBJNode(String value) {
-        super(value);
+import java.util.*;
+
+public class OBJNode extends ExprNode {
+    // Fields
+    private ExprNode expr;
+    // Constructor
+    public OBJNode(ExprNode expr) {
+        super();
+        this.expr = expr;
+    }
+    // Getters and Setters
+    public ExprNode getExpr() {
+        return this.expr;
+    }
+    public void setExpr(ExprNode expr) {
+        this.expr = expr;
     }
 
     @Override

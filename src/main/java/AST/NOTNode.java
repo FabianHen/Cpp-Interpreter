@@ -1,8 +1,22 @@
 package AST;
 
-public class NOTNode extends ASTNode {
-    public NOTNode(String value) {
-        super(value);
+import java.util.*;
+
+public class NOTNode extends ExprNode {
+    // Fields
+    private ExprNode expr;
+
+    // Constructor
+    public NOTNode(ExprNode expr) {
+        super();
+        this.expr = expr;
+    }
+    // Getters and Setters
+    public ExprNode getExpr() {
+        return this.expr;
+    }
+    public void setExpr(ExprNode expr) {
+        this.expr = expr;
     }
 
     @Override

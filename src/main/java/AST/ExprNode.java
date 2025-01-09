@@ -1,12 +1,11 @@
 package AST;
 
-public class ExprNode extends ASTNode {
-    public ExprNode(String value) {
-        super(value);
-    }
+import java.util.*;
 
-    @Override
-    public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visit(this);
+public abstract class ExprNode extends ASTNode {
+    // Constructor
+    public ExprNode() {
+        super();
+        
     }
 }

@@ -1,8 +1,33 @@
 package AST;
 
+import java.util.*;
+
 public class OverrideFndefNode extends ASTNode {
-    public OverrideFndefNode(String value) {
-        super(value);
+    // Fields
+    private FndeclNode fndecl;
+    private BlockNode block;
+
+    // Constructor
+    public OverrideFndefNode(FndeclNode fndecl, BlockNode block) {
+        super();
+        this.fndecl = fndecl;
+        this.block = block;
+    }
+
+    // Getters and Setters
+    
+    public FndeclNode getFndecl() {
+        return this.fndecl;
+    }
+    public void setFndecl(FndeclNode fndecl) {
+        this.fndecl = fndecl;
+    }
+
+    public BlockNode getBlock() {
+        return this.block;
+    }
+    public void setBlock(BlockNode block) {
+        this.block = block;
     }
 
     @Override

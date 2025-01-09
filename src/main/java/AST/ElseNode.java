@@ -1,8 +1,23 @@
 package AST;
 
+import java.util.*;
+
 public class ElseNode extends ASTNode {
-    public ElseNode(String value) {
-        super(value);
+    // Fields
+    private BlockNode block;
+
+    // Constructor
+    public ElseNode(BlockNode block) {
+        super();
+        this.block = block;
+    }
+
+    // Getters and Setters
+    public BlockNode getBlock() {
+        return this.block;
+    }
+    public void setBlock(BlockNode block) {
+        this.block = block;
     }
 
     @Override

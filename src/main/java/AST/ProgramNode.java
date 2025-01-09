@@ -1,8 +1,11 @@
 package AST;
 
+import java.util.*;
+
 public class ProgramNode extends ASTNode {
-    public ProgramNode(String value) {
-        super(value);
+    // Constructor
+    public ProgramNode() {
+        super();
     }
 
     @Override
