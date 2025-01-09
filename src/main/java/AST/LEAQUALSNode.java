@@ -1,7 +1,7 @@
 package AST;
 
-public class INCDECNode extends ASTNode {
-    public INCDECNode(String value) {
+public class LEAQUALSNode extends ASTNode {
+    public LEAQUALSNode(String value) {
         super(value);
     }
 
