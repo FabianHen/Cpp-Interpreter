@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class IncDecNode extends ASTNode {
     // Fields
     private IDNode id;
@@ -36,7 +34,7 @@ public class IncDecNode extends ASTNode {
     public void setPre(boolean pre) {
         isPre = pre;
     }
-    
+
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visit(this);

@@ -5,12 +5,12 @@ import java.util.*;
 public class BindingNode extends ASTNode {
     // Fields
     private List<ObjcallNode> objcalls;
-    private IDNode id;
+    private IdentifierNode id;
     private String assignop;
     private ExprNode expr;
 
     // Constructor
-    public BindingNode(List<ObjcallNode> objcalls, IDNode id, String assignop, ExprNode expr) {
+    public BindingNode(List<ObjcallNode> objcalls, IdentifierNode id, String assignop, ExprNode expr) {
         super();
         this.objcalls = objcalls;
         this.id = id;
@@ -32,10 +32,10 @@ public class BindingNode extends ASTNode {
         this.objcalls = objcalls;
     }
     
-    public IDNode getId() {
+    public IdentifierNode getId() {
         return this.id;
     }
-    public void setId(IDNode id) {
+    public void setId(IdentifierNode id) {
         this.id = id;
     }
     

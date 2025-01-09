@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class ConstructorCallNode extends ASTNode {
     // Fields
     private IDNode typeName;

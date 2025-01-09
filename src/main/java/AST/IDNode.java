@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class IDNode extends ExprNode {
     // Fields
     private String id;

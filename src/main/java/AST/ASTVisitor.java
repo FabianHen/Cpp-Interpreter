@@ -47,4 +47,7 @@ public interface ASTVisitor <T>{
     T visit(CHARNode charNode);
     T visit(INTNode intNode);
     T visit(IDNode idNode);
+    T visit(OverrideFndeclNode overrideFndeclNode);
+    T visit(VirtualNode virtualNode);
+    T visit(ConstructorNode constructorNode);
 }

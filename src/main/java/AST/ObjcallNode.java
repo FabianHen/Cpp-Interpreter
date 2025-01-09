@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class ObjcallNode extends ASTNode {
     // Fields
     private IDNode id;
