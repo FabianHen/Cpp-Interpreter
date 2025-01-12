@@ -75,7 +75,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       this.currentScope = currentObjScope;
       return null;
     }
-      if (!bindingNode.getAssignop().equals("=")) {
+    if (!bindingNode.getAssignop().equals("=")) {
       // Check symbol type (int)
       if (!var.getType().equals(this.builtInInt)) {
         System.err.println(
@@ -109,7 +109,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     }
     Symbol type = currentScope.resolve(vardeclNode.getType().getClassName());
 
-    //TODO: 'type == null' seems to be unnecessary
+    // TODO: 'type == null' seems to be unnecessary
     if (type == null || !(type instanceof STType)) {
       System.err.println(vardeclNode.getType().getClassName() + " is not a valid type!");
       return null;
@@ -155,7 +155,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
     }
     Symbol type = this.currentScope.resolve(fndeclNode.getReturntype().getClassName());
-    //TODO: 'type == null' seems to be unnecessary
+    // TODO: 'type == null' seems to be unnecessary
     if (type == null || !(type instanceof STType)) {
       System.err.println(
           "Invalid return type for function " + fndeclNode.getIdNode().getId() + "!");
@@ -232,19 +232,17 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(WhileNode whileNode) {
     Symbol conditionType = whileNode.getCondition().accept(this);
-    if(conditionType instanceof BuiltIn builtIn) {
-      if(!builtIn.equals(this.builtInBool)){
-        System.err.println("Cannot use type " + builtIn.getName() + " as while loop condition");
-        return null;
-      }
-      whileNode.getBlock().accept(this);
+    if (!conditionType.equals(this.builtInBool)) {
+      System.err.println("Type of variable '" + conditionType.getName() + "' is not a valid condition type!");
+      return null;
     }
+    whileNode.getBlock().accept(this);
     return conditionType;
   }
 
   @Override
   public Symbol visit(IfNode ifNode) {
-    //TODO: Connect If/Elseif/Else blocks with scopes all
+    // TODO: Connect If/Elseif/Else blocks with scopes all
     return null;
   }
 
@@ -267,11 +265,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(IncDecNode incDecNode) {
     Symbol idNode = currentScope.resolve(incDecNode.getIdNode().getId());
-    if(idNode == null) {
+    if (idNode == null) {
       System.err.println("Could not find Variable " + incDecNode.getIdNode().getId() + "!");
       return null;
     }
-    if(!this.builtInInt.equals(idNode.getType())) {
+    if (!this.builtInInt.equals(idNode.getType())) {
       System.err.println("Could not increment " + incDecNode.getIdNode().getId());
       return null;
     }
@@ -280,14 +278,14 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ArgsNode argsNode) {
-    //TODO: What do we need to check here?
+    // TODO: What do we need to check here?
     return null;
   }
 
   @Override
   public Symbol visit(ParamNode paramNode) {
     Symbol type = this.currentScope.resolve(paramNode.getTypeNode().getClassName());
-    //TODO: 'type == null' seems to be unnecessary
+    // TODO: 'type == null' seems to be unnecessary
     if (type == null || !(type instanceof STType)) {
       System.err.println(
           "Invalid type of parameter " + paramNode.getIdentifier().getIdNode().getId() + "!");
@@ -300,7 +298,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(BlockNode blockNode) {
     this.currentScope = new Scope(currentScope);
-    for(var child : blockNode.getChildren()){
+    for (var child : blockNode.getChildren()) {
       child.accept(this);
     }
     this.currentScope = this.currentScope.getParent();
@@ -311,7 +309,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(TypeNode typeNode) {
     Symbol type = currentScope.resolve(typeNode.getClassName());
     // TODO: Does this make typechecking for not built in types in other functions unnecessary?
-    if(type == null){
+    if (type == null) {
       System.err.println("Invalid Type " + typeNode.getClassName() + "!");
     }
     return type;
@@ -319,7 +317,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(FNCALLNode fncallNode) {
-    // TODO: check function existence (objcall iteration function), iterate over args and validate them
+    // TODO: check function existence (objcall iteration function), iterate over args and validate
+    // them
     return null;
   }
 
@@ -339,8 +338,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(MULNode mulNode) {
     Symbol e1Type = mulNode.getE1().accept(this);
     Symbol e2Type = mulNode.getE2().accept(this);
-    if(!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
-      System.err.println("Cannot multiply types " + e1Type.getName() + " and " + e2Type.getName() + "!");
+    if (!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
+      System.err.println(
+          "Cannot multiply types " + e1Type.getName() + " and " + e2Type.getName() + "!");
       return null;
     }
     return this.builtInInt;
@@ -350,8 +350,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(DIVNode divNode) {
     Symbol e1Type = divNode.getE1().accept(this);
     Symbol e2Type = divNode.getE2().accept(this);
-    if(!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
-      System.err.println("Cannot divide types " + e1Type.getName() + " and " + e2Type.getName() + "!");
+    if (!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
+      System.err.println(
+          "Cannot divide types " + e1Type.getName() + " and " + e2Type.getName() + "!");
       return null;
     }
     return this.builtInInt;
@@ -361,7 +362,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(ADDNode addNode) {
     Symbol e1Type = addNode.getE1().accept(this);
     Symbol e2Type = addNode.getE2().accept(this);
-    if(!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
+    if (!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
       System.err.println("Cannot add types " + e1Type.getName() + " and " + e2Type.getName() + "!");
       return null;
     }
@@ -372,8 +373,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(SUBNode subNode) {
     Symbol e1Type = subNode.getE1().accept(this);
     Symbol e2Type = subNode.getE2().accept(this);
-    if(!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
-      System.err.println("Cannot subtract types " + e1Type.getName() + " and " + e2Type.getName() + "!");
+    if (!this.builtInInt.equals(e1Type) || !this.builtInInt.equals(e2Type)) {
+      System.err.println(
+          "Cannot subtract types " + e1Type.getName() + " and " + e2Type.getName() + "!");
       return null;
     }
     return this.builtInInt;
@@ -381,13 +383,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(EQUALSNode equalsNode) {
-    //TODO: Always bool? Can everything be compared or only same types?
+    // TODO: Always bool? Can everything be compared or only same types?
     return this.builtInBool;
   }
 
   @Override
   public Symbol visit(NEAQUALSNode neequalsNode) {
-    //TODO: Always bool? Can everything be compared or only same types?
+    // TODO: Always bool? Can everything be compared or only same types?
     return this.builtInBool;
   }
 
@@ -420,8 +422,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
   }
 
   private Symbol checkSizeComparison(Symbol type1, Symbol type2) {
-    if(!this.builtInInt.equals(type1) || !this.builtInInt.equals(type2)) {
-      System.err.println("Cannot compare types " + type1.getName() + " and " + type2.getName() + " in size!");
+    if (!this.builtInInt.equals(type1) || !this.builtInInt.equals(type2)) {
+      System.err.println(
+          "Cannot compare types " + type1.getName() + " and " + type2.getName() + " in size!");
       return null;
     }
     return this.builtInBool;
@@ -431,8 +434,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(ANDNode andNode) {
     Symbol e1Type = andNode.getE1().accept(this);
     Symbol e2Type = andNode.getE2().accept(this);
-    if(!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
-      System.err.println("Cannot use types " + e1Type.getName() + " and " + e2Type.getName() + " with '&&' operator");
+    if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
+      System.err.println(
+          "Cannot use types "
+              + e1Type.getName()
+              + " and "
+              + e2Type.getName()
+              + " with '&&' operator");
       return null;
     }
     return this.builtInBool;
@@ -442,8 +450,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(ORNode orNode) {
     Symbol e1Type = orNode.getE1().accept(this);
     Symbol e2Type = orNode.getE2().accept(this);
-    if(!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
-      System.err.println("Cannot use types " + e1Type.getName() + " and " + e2Type.getName() + " with '||' operator");
+    if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
+      System.err.println(
+          "Cannot use types "
+              + e1Type.getName()
+              + " and "
+              + e2Type.getName()
+              + " with '||' operator");
       return null;
     }
     return this.builtInBool;
@@ -451,14 +464,14 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ARRACCNode arraccNode) {
-    //TODO: Check if variable is array and has that many dimensions
+    // TODO: Check if variable is array and has that many dimensions
     return null;
   }
 
   @Override
   public Symbol visit(OBJNode objNode) {
     Symbol objType = objNode.getExpr().accept(this);
-    if(objType instanceof BuiltIn){
+    if (objType instanceof BuiltIn) {
       System.err.println("Cannot access members of builtin type " + objType.getName());
       return null;
     }
@@ -468,7 +481,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(NOTNode notNode) {
     Symbol expressionType = notNode.getExpr().accept(this);
-    if(!this.builtInBool.equals(expressionType)) {
+    if (!this.builtInBool.equals(expressionType)) {
       System.err.println("Cannot negate variable of type " + expressionType.getName());
       return null;
     }
@@ -477,7 +490,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(BOOLNode boolNode) {
-    //TODO: Is only returning the builtin type sufficient?
+    // TODO: Is only returning the builtin type sufficient?
     return this.builtInBool;
   }
 

@@ -26,8 +26,7 @@ public class Main {
   }
 
   public static void main(String... args) throws IOException {
-    String iteration = "First"; // First, Second, Third or Fourth
-    String filename = "src/testInput/grammarTest_cpp.txt"; // + iteration + "Iteration.txt";
+    String filename = "src/testInput/FirstIteration.txt"; // + iteration + "Iteration.txt";
     ANTLRInputStream input = new ANTLRFileStream(filename);
     CppLexer lexer = new CppLexer(input);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -36,5 +35,7 @@ public class Main {
     ASTBuilder astBuilder = new ASTBuilder();
     ASTNode node = astBuilder.visit(tree);
     printTree(node, "", true);
+    STBuilder stBuilder = new STBuilder();
+    node.accept(stBuilder);
   }
 }
