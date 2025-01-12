@@ -2,24 +2,24 @@ package AST;
 
 public class DestructorNode extends ASTNode {
   // Fields
-  private IDNode id;
+  private IDNode idNode;
   private BlockNode block;
   private boolean isVirtual;
 
   // Constructor
-  public DestructorNode(IDNode id, BlockNode block, boolean isVirtual) {
+  public DestructorNode(IDNode idNode, BlockNode block, boolean isVirtual) {
     super();
-    this.id = id;
+    this.idNode = idNode;
     this.block = block;
     this.isVirtual = isVirtual;
 
-    addChild(id);
+    addChild(idNode);
     addChild(block);
   }
 
   // Getters and Setters
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
   public BlockNode getBlock() {

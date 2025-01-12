@@ -4,38 +4,38 @@ import java.util.*;
 
 public class IdentifierNode extends ASTNode {
   // Fields
-  private IDNode id;
+  private IDNode idNode;
   private List<ExprNode> sizes;
   private boolean isReference;
   private int dimension;
 
   // Constructor
-  public IdentifierNode(IDNode id, boolean isReference) {
+  public IdentifierNode(IDNode idNode, boolean isReference) {
     super();
-    this.id = id;
+    this.idNode = idNode;
     this.sizes = new ArrayList<>();
     this.dimension = 0;
     this.isReference = isReference;
 
-    addChild(id);
+    addChild(this.idNode);
   }
 
-  public IdentifierNode(IDNode id, List<ExprNode> sizes, int dimension, boolean isReference) {
+  public IdentifierNode(IDNode idNode, List<ExprNode> sizes, int dimension, boolean isReference) {
     super();
-    this.id = id;
+    this.idNode = idNode;
     this.sizes = sizes;
     this.dimension = dimension;
     this.isReference = isReference;
 
-    addChild(id);
+    addChild(this.idNode);
     for (ExprNode child : sizes) {
       addChild(child);
     }
   }
 
   // Getters and Setters
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
   public ExprNode getExpr(int index) {

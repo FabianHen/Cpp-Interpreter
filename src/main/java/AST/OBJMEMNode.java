@@ -6,12 +6,14 @@ public class OBJMEMNode extends ExprNode {
   // Fields
   private List<ObjcallNode> objcalls;
   private IDNode id;
+  private boolean hasThis;
 
   // Constructor
-  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode id) {
+  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode id, boolean hasThis) {
     super();
     this.objcalls = objcalls;
     this.id = id;
+    this.hasThis = hasThis;
 
     for (ObjcallNode child : objcalls) {
       addChild(child);
@@ -30,6 +32,10 @@ public class OBJMEMNode extends ExprNode {
 
   public IDNode getId() {
     return this.id;
+  }
+
+  public boolean hasThis() {
+    return hasThis;
   }
 
   @Override

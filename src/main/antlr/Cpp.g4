@@ -7,17 +7,22 @@ program
 
 stmt
     :   classDef ';'
-    |   binding ';'
-    |   vardecl ';'
     |   fndecl ';'
+    |   fndef
+    |   blockStmt
+    ;
+
+blockStmt
+    :   binding ';'
+    |   vardecl ';'
     |   return ';'
     |   constructorCall ';'
-    |   fndef
     |   print ';'
     |   while
     |   if
     |   expr ';'
     ;
+
 
 expr
     :   'new' ID  '(' args? ')'     #NEW
@@ -32,8 +37,8 @@ expr
     |   e1 = expr '<'  e2 = expr    #LESS
     |   e1 = expr '>=' e2 = expr    #GEAQUALS
     |   e1 = expr '<=' e2 = expr    #LEAQUALS
-    |   e1 = expr '&&' e2 =expr     #AND
-    |   e1 = expr '||' e2 =expr     #OR
+    |   e1 = expr '&&' e2 = expr    #AND
+    |   e1 = expr '||' e2 = expr    #OR
     |   expr (LEFTBRACKET expr RIGHTBRACKET)+        #ARRACC
     |   '{'args'}'                  #ARRVALS
     |   incDec                      #INCDECWRAP
@@ -43,8 +48,8 @@ expr
     |   CHAR                        #CHAR
     |   INT                         #INT
     |   ID                          #ID
-    |   objcall* ID '(' args? ')'   #FNCALL
-    |   objcall* ID                 #OBJMEM
+    |   (THIS '.')? objcall* ID '(' args? ')'   #FNCALL
+    |   (THIS '.')? objcall* ID                 #OBJMEM
     ;
 
 // STMT
@@ -67,7 +72,7 @@ overrideFndecl
     ;
 
 virtual
-    : 'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
+    :   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
     ;
 destructor
     :   'virtual'? '~' ID '(' ')' block
@@ -156,7 +161,7 @@ param
     ;
 
 block
-    :   '{' (stmt)* '}'
+    :   '{' (blockStmt)* '}'
     ;
 
 type
@@ -175,6 +180,8 @@ assignop
 TYPEINT :   'int';
 TYPECHAR:   'char';
 TYPEBOOL:   'bool';
+
+THIS    :   'this';
 
 ASSIGN
     :   '+='

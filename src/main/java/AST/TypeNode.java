@@ -11,7 +11,7 @@ public class TypeNode extends ASTNode {
   public TypeNode(Type type) {
     super();
     this.type = type;
-    this.className = "";
+    this.className = type.name().toLowerCase();
   }
 
   public TypeNode(String className) {

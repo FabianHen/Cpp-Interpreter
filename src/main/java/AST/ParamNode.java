@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class ParamNode extends ASTNode {
   // Fields
   private TypeNode type;
@@ -18,7 +16,7 @@ public class ParamNode extends ASTNode {
   }
 
   // Getters and Setters
-  public TypeNode getType() {
+  public TypeNode getTypeNode() {
     return this.type;
   }
 

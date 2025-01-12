@@ -1,23 +1,22 @@
 package AST;
 
+import java.util.List;
+
 public class FndeclNode extends ASTNode {
   // Fields
   private TypeNode returnType;
-  private IDNode id;
-  private ParamlistNode paramlist;
+  private IDNode idNode;
+  private List<ParamNode> params;
 
   // Constructor
-  public FndeclNode(TypeNode returnType, IDNode id, ParamlistNode paramlist) {
+  public FndeclNode(TypeNode returnType, IDNode idNode, List<ParamNode> params) {
     super();
     this.returnType = returnType;
-    this.id = id;
-    this.paramlist = paramlist;
+    this.idNode = idNode;
+    this.params = params;
 
     addChild(returnType);
-    addChild(id);
-    if (paramlist != null) {
-      addChild(paramlist);
-    }
+    addChild(idNode);
   }
 
   // Getters and Setters
@@ -25,12 +24,16 @@ public class FndeclNode extends ASTNode {
     return this.returnType;
   }
 
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
-  public ParamlistNode getParamlist() {
-    return this.paramlist;
+  public List<ParamNode> getParams() {
+    return this.params;
+  }
+
+  public ParamNode getParamNode(int index) {
+    return this.params.get(index);
   }
 
   @Override

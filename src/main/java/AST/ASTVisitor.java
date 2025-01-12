@@ -3,8 +3,6 @@ package AST;
 public interface ASTVisitor<T> {
   T visit(ProgramNode programNode);
 
-  T visit(ExprNode exprNode);
-
   T visit(ClassDefNode classDefNode);
 
   T visit(DestructorNode destructorNode);
@@ -40,8 +38,6 @@ public interface ASTVisitor<T> {
   T visit(IncDecNode incDecNode);
 
   T visit(ArgsNode argsNode);
-
-  T visit(ParamlistNode paramlistNode);
 
   T visit(ParamNode paramNode);
 

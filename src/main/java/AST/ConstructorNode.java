@@ -5,20 +5,17 @@ import java.util.*;
 public class ConstructorNode extends ASTNode {
   // Fields
   private IDNode id;
-  private ParamlistNode paramlist;
+  private List<ParamNode> params;
   private BlockNode block;
 
   // Constructor
-  public ConstructorNode(IDNode id, ParamlistNode paramlist, BlockNode block) {
+  public ConstructorNode(IDNode id, List<ParamNode> params, BlockNode block) {
     super();
     this.id = id;
-    this.paramlist = paramlist;
+    this.params = params;
     this.block = block;
 
     addChild(id);
-    if (paramlist != null) {
-      addChild(paramlist);
-    }
     addChild(block);
   }
 
@@ -27,8 +24,12 @@ public class ConstructorNode extends ASTNode {
     return this.id;
   }
 
-  public ParamlistNode getParamlist() {
-    return this.paramlist;
+  public List<ParamNode> getParams() {
+    return this.params;
+  }
+
+  public ParamNode getParam(int index) {
+    return this.params.get(index);
   }
 
   public BlockNode getBlock() {

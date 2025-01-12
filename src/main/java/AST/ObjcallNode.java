@@ -2,24 +2,24 @@ package AST;
 
 public class ObjcallNode extends ASTNode {
   // Fields
-  private IDNode id;
+  private IDNode idNode;
   private ArgsNode args;
 
   // Constructor
-  public ObjcallNode(IDNode id, ArgsNode args) {
+  public ObjcallNode(IDNode idNode, ArgsNode args) {
     super();
-    this.id = id;
+    this.idNode = idNode;
     this.args = args;
 
-    addChild(id);
+    addChild(idNode);
     if (args != null) {
       addChild(args);
     }
   }
 
   // Getters and Setters
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
   public ArgsNode getArgs() {
