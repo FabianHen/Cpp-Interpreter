@@ -45,7 +45,7 @@ public interface ASTVisitor<T> {
 
   T visit(TypeNode typeNode);
 
-  T visit(FNCALLNode fncallNode);
+  T visit(FncallNode fncallNode);
 
   T visit(OBJMEMNode objmemNode);
 
@@ -76,8 +76,6 @@ public interface ASTVisitor<T> {
   T visit(ORNode orNode);
 
   T visit(ARRACCNode arraccNode);
-
-  T visit(OBJNode objNode);
 
   T visit(NOTNode notNode);
 

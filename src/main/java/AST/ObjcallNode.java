@@ -1,19 +1,27 @@
 package AST;
 
+import java.util.List;
+
 public class ObjcallNode extends ASTNode {
   // Fields
   private IDNode idNode;
-  private ArgsNode args;
+  private FncallNode fncallNode;
+  private List<ExprNode> indices;
 
   // Constructor
-  public ObjcallNode(IDNode idNode, ArgsNode args) {
+  public ObjcallNode(IDNode idNode, FncallNode fncallNode, List<ExprNode> indices) {
     super();
     this.idNode = idNode;
-    this.args = args;
-
-    addChild(idNode);
-    if (args != null) {
-      addChild(args);
+    this.fncallNode = fncallNode;
+    this.indices = indices;
+    for (var index : indices) {
+      addChild(index);
+    }
+    if (idNode != null) {
+      addChild(idNode);
+    }
+    if (fncallNode != null) {
+      addChild(fncallNode);
     }
   }
 
@@ -22,8 +30,28 @@ public class ObjcallNode extends ASTNode {
     return this.idNode;
   }
 
-  public ArgsNode getArgs() {
-    return this.args;
+  public FncallNode getFncallNode() {
+    return this.fncallNode;
+  }
+
+  public boolean isFunctionCall() {
+    return fncallNode != null;
+  }
+
+  public List<ExprNode> getIndices() {
+    return indices;
+  }
+
+  public ExprNode getIndex(int index) {
+    return indices.get(index);
+  }
+
+  public boolean isArray() {
+    return getDimension() > 0;
+  }
+
+  public int getDimension() {
+    return indices.size();
   }
 
   @Override

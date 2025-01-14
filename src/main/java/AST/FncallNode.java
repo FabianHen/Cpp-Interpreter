@@ -2,27 +2,27 @@ package AST;
 
 import java.util.*;
 
-public class FNCALLNode extends ExprNode {
+public class FncallNode extends ExprNode {
   // Fields
   private List<ObjcallNode> objcalls;
-  private IDNode id;
-  private ArgsNode args;
+  private IDNode idNode;
+  private ArgsNode argsNode;
   private boolean hasThis;
 
   // Constructor
-  public FNCALLNode(List<ObjcallNode> objcalls, IDNode id, ArgsNode args, boolean hasThis) {
+  public FncallNode(List<ObjcallNode> objcalls, IDNode idNode, ArgsNode argsNode, boolean hasThis) {
     super();
     this.objcalls = objcalls;
-    this.id = id;
-    this.args = args;
+    this.idNode = idNode;
+    this.argsNode = argsNode;
     this.hasThis = hasThis;
 
     for (ObjcallNode child : objcalls) {
       addChild(child);
     }
-    addChild(id);
-    if (args != null) {
-      addChild(args);
+    addChild(idNode);
+    if (argsNode != null) {
+      addChild(argsNode);
     }
   }
 
@@ -35,12 +35,20 @@ public class FNCALLNode extends ExprNode {
     return this.objcalls.get(index);
   }
 
-  public IDNode getId() {
-    return this.id;
+  public void setObjcalls(List<ObjcallNode> objcalls) {
+    this.objcalls = objcalls;
   }
 
-  public ArgsNode getArgs() {
-    return this.args;
+  public void setHasThis(boolean hasThis) {
+    this.hasThis = hasThis;
+  }
+
+  public IDNode getIdNode() {
+    return this.idNode;
+  }
+
+  public ArgsNode getArgsNode() {
+    return this.argsNode;
   }
 
   public boolean hasThis() {

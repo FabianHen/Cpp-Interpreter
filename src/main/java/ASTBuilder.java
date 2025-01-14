@@ -65,11 +65,6 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   }
 
   @Override
-  public ASTNode visitOBJ(CppParser.OBJContext ctx) {
-    return new OBJNode((ExprNode) visit(ctx.expr()));
-  }
-
-  @Override
   public ASTNode visitID(CppParser.IDContext ctx) {
     return new IDNode(ctx.ID().getText());
   }
@@ -136,7 +131,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitAND(CppParser.ANDContext ctx) {
-    return new ADDNode((ExprNode) visit(ctx.e1), (ExprNode) visit(ctx.e2));
+    return new ANDNode((ExprNode) visit(ctx.e1), (ExprNode) visit(ctx.e2));
   }
 
   @Override
@@ -145,19 +140,24 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   }
 
   @Override
-  public ASTNode visitFNCALL(CppParser.FNCALLContext ctx) {
+  public ASTNode visitFNCALLWRAP(CppParser.FNCALLWRAPContext ctx) {
     List<ObjcallNode> objcalls = new ArrayList<ObjcallNode>();
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
-    if (ctx.args() != null) {
-      return new FNCALLNode(
-          objcalls,
-          new IDNode(ctx.ID().getText()),
-          (ArgsNode) visit(ctx.args()),
-          ctx.THIS() != null);
-    }
-    return new FNCALLNode(objcalls, new IDNode(ctx.ID().getText()), null, ctx.THIS() != null);
+    FncallNode fncallNode = (FncallNode) visit(ctx.fncall());
+    fncallNode.setObjcalls(objcalls);
+    fncallNode.setHasThis(ctx.THIS() != null);
+    return fncallNode;
+  }
+
+  @Override
+  public ASTNode visitFncall(CppParser.FncallContext ctx) {
+    return new FncallNode(
+        new ArrayList<>(),
+        new IDNode(ctx.ID().getText()),
+        (ctx.args() != null ? (ArgsNode) visit(ctx.args()) : null),
+        false);
   }
 
   @Override
@@ -223,10 +223,14 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitObjcall(CppParser.ObjcallContext ctx) {
-    if (ctx.args() == null) {
-      return new ObjcallNode(new IDNode(ctx.ID().getText()), null);
+    List<ExprNode> exprNodes = new ArrayList<>();
+    for (var expr : ctx.expr()) {
+      exprNodes.add((ExprNode) visit(expr));
     }
-    return new ObjcallNode(new IDNode(ctx.ID().getText()), (ArgsNode) visit(ctx.args()));
+    if (ctx.ID() == null) {
+      return new ObjcallNode(null, (FncallNode) visit(ctx.fncall()), exprNodes);
+    }
+    return new ObjcallNode(new IDNode(ctx.ID().getText()), null, exprNodes);
   }
 
   @Override

@@ -5,8 +5,10 @@ public class STClass extends Scope implements STType, Symbol {
   private STType type;
   private Scope scope;
 
-  public STClass(Scope parent) {
+  public STClass(Scope parent, String name) {
     super(parent);
+    this.name = name;
+    this.type = this;
   }
 
   @Override

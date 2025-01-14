@@ -4,18 +4,18 @@ import java.util.*;
 
 public class ClassDefNode extends ASTNode {
   // Fields
-  private IDNode cName;
+  private IDNode name;
   private IDNode parentClass;
   private List<ASTNode> classMembers;
 
   // Constructor
-  public ClassDefNode(IDNode cName, IDNode parentClass, List<ASTNode> classMembers) {
+  public ClassDefNode(IDNode name, IDNode parentClass, List<ASTNode> classMembers) {
     super();
-    this.cName = cName;
+    this.name = name;
     this.parentClass = parentClass;
     this.classMembers = classMembers;
 
-    addChild(cName);
+    addChild(name);
     if (parentClass != null) {
       addChild(parentClass);
     }
@@ -25,8 +25,8 @@ public class ClassDefNode extends ASTNode {
   }
 
   // Getters and Setters
-  public IDNode getCname() {
-    return this.cName;
+  public IDNode getName() {
+    return this.name;
   }
 
   public IDNode getParentclass() {

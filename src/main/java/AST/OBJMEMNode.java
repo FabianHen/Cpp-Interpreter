@@ -5,20 +5,20 @@ import java.util.*;
 public class OBJMEMNode extends ExprNode {
   // Fields
   private List<ObjcallNode> objcalls;
-  private IDNode id;
+  private IDNode idNode;
   private boolean hasThis;
 
   // Constructor
-  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode id, boolean hasThis) {
+  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode idNode, boolean hasThis) {
     super();
     this.objcalls = objcalls;
-    this.id = id;
+    this.idNode = idNode;
     this.hasThis = hasThis;
 
     for (ObjcallNode child : objcalls) {
       addChild(child);
     }
-    addChild(id);
+    addChild(idNode);
   }
 
   // Getters and Setters
@@ -30,8 +30,8 @@ public class OBJMEMNode extends ExprNode {
     return this.objcalls.get(index);
   }
 
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
   public boolean hasThis() {

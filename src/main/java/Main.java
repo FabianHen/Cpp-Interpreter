@@ -26,7 +26,7 @@ public class Main {
   }
 
   public static void main(String... args) throws IOException {
-    String filename = "src/testInput/FirstIteration.txt"; // + iteration + "Iteration.txt";
+    String filename = "src/testInput/FirstIteration.txt";
     ANTLRInputStream input = new ANTLRFileStream(filename);
     CppLexer lexer = new CppLexer(input);
     CommonTokenStream tokens = new CommonTokenStream(lexer);

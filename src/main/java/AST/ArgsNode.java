@@ -20,7 +20,7 @@ public class ArgsNode extends ExprNode {
     return this.arguments;
   }
 
-  public ExprNode getExprNode(int index) {
+  public ExprNode getArgument(int index) {
     return this.arguments.get(index);
   }
 

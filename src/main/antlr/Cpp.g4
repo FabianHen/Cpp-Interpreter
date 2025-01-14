@@ -42,14 +42,13 @@ expr
     |   expr (LEFTBRACKET expr RIGHTBRACKET)+        #ARRACC
     |   '{'args'}'                  #ARRVALS
     |   incDec                      #INCDECWRAP
-    |   expr '.'                    #OBJ
     |   NOT expr                    #NOT
     |   BOOL                        #BOOL
     |   CHAR                        #CHAR
     |   INT                         #INT
     |   ID                          #ID
-    |   (THIS '.')? objcall* ID '(' args? ')'   #FNCALL
-    |   (THIS '.')? objcall* ID                 #OBJMEM
+    |   (THIS ('.'|'->'))? objcall* fncall #FNCALLWRAP
+    |   (THIS ('.'|'->'))? objcall* ID     #OBJMEM
     ;
 
 // STMT
@@ -83,7 +82,11 @@ binding
     ;
 
 objcall
-    :   (ID ('(' args ? ')')?  '.')
+    :   (ID (LEFTBRACKET expr RIGHTBRACKET)*|fncall)  ('.'|'->')
+    ;
+
+fncall
+    : ID '(' args? ')'
     ;
 
 vardecl
