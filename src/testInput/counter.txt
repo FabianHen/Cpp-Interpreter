@@ -16,5 +16,7 @@ class Counter{
 int main(){
     Counter counter = new Counter(5);
     counter.count();
+
+    return 0;
 }
 

@@ -1,19 +1,17 @@
 package AST;
 
-import java.util.*;
-
 public class NEWNode extends ExprNode {
   // Fields
-  private IDNode id;
+  private IDNode idNode;
   private ArgsNode args;
 
   // Constructor
-  public NEWNode(IDNode id, ArgsNode args) {
+  public NEWNode(IDNode idNode, ArgsNode args) {
     super();
-    this.id = id;
+    this.idNode = idNode;
     this.args = args;
 
-    addChild(id);
+    addChild(idNode);
     if (args != null) {
       addChild(args);
     }
@@ -21,11 +19,11 @@ public class NEWNode extends ExprNode {
 
   // Getters and Setters
 
-  public IDNode getId() {
-    return this.id;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
-  public ArgsNode getArgs() {
+  public ArgsNode getArgsNode() {
     return args;
   }
 

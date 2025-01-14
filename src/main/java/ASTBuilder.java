@@ -285,7 +285,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
           new IDNode(ctx.ID().getText()), params, (BlockNode) visit(ctx.block()));
     }
     return new ConstructorNode(
-        new IDNode(ctx.ID().getText()), null, (BlockNode) visit(ctx.block()));
+        new IDNode(ctx.ID().getText()), new ArrayList<>(), (BlockNode) visit(ctx.block()));
   }
 
   @Override

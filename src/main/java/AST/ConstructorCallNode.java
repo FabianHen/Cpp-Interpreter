@@ -28,7 +28,7 @@ public class ConstructorCallNode extends ASTNode {
     return this.instanceName;
   }
 
-  public ArgsNode getArgs() {
+  public ArgsNode getArgsNode() {
     return this.args;
   }
 

@@ -53,7 +53,7 @@ expr
 
 // STMT
 classDef
-    :   'class' cName=ID (':' pName=ID )? '{' classMember* '}'
+    :   'class' cName=ID (':' pName=ID )? '{' 'public:'? classMember* '}'
     ;
 
 classMember
