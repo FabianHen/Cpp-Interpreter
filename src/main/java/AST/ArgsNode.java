@@ -6,6 +6,7 @@ public class ArgsNode extends ExprNode {
   // Fields
   private List<ExprNode> arguments;
   private boolean isArrVals;
+
   // Constructor
   public ArgsNode(List<ExprNode> arguments) {
     super();
@@ -19,9 +20,11 @@ public class ArgsNode extends ExprNode {
   public void setArrVals(boolean isArrVals) {
     this.isArrVals = isArrVals;
   }
+
   public boolean isArrVals() {
     return isArrVals;
   }
+
   // Getters and Setters
   public List<ExprNode> getArguments() {
     return this.arguments;

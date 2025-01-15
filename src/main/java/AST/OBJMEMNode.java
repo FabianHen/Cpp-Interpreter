@@ -6,19 +6,22 @@ public class OBJMEMNode extends ExprNode {
   // Fields
   private List<ObjcallNode> objcalls;
   private IDNode idNode;
+  private ARRACCNode arraccNode;
   private boolean hasThis;
 
   // Constructor
-  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode idNode, boolean hasThis) {
+  public OBJMEMNode(List<ObjcallNode> objcalls, IDNode idNode, boolean hasThis, ARRACCNode arraccNode) {
     super();
     this.objcalls = objcalls;
     this.idNode = idNode;
     this.hasThis = hasThis;
+    this.arraccNode = arraccNode;
 
     for (ObjcallNode child : objcalls) {
       addChild(child);
     }
-    addChild(idNode);
+    if (idNode != null) {addChild(idNode);}
+    if (arraccNode != null) {addChild(arraccNode);}
   }
 
   // Getters and Setters
@@ -33,6 +36,10 @@ public class OBJMEMNode extends ExprNode {
   public IDNode getIdNode() {
     return this.idNode;
   }
+
+  public ARRACCNode getArraccNode() { return this.arraccNode;}
+
+  public boolean hasArraccNode() { return this.arraccNode != null;}
 
   public boolean hasThis() {
     return hasThis;

@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.*;
-
 public class VardeclNode extends ASTNode {
   // Fields
   private TypeNode type;

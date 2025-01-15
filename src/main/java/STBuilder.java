@@ -61,65 +61,72 @@ public class STBuilder implements ASTVisitor<Symbol> {
     }
     return true;
   }
+
   private Symbol compareTypes(STType type1, STType type2) {
     if (type1 instanceof Array varArray) {
       if (type2 instanceof Array exprArray) {
-        if(!varArray.getType().equals(exprArray.getType())){
+        if (!varArray.getType().equals(exprArray.getType())) {
           System.err.println(
-                  "Types '" + type1.getName() + "' and '" + type2.getName() + "' do not match!");
+              "Types '" + type1.getName() + "' and '" + type2.getName() + "' do not match!");
           return null;
         }
-        if(varArray.getDimension() != exprArray.getDimension()){
+        if (varArray.getDimension() != exprArray.getDimension()) {
           System.err.println("Array dimensions don't match!");
           return null;
         }
       } else {
         System.err.println(
-                "Type mismatch between '"
-                        + varArray.getName()
-                        + "' and '"
-                        + (type2 == null ? "null" : type2.getName())
-                        + "'!");
+            "Type mismatch between '"
+                + varArray.getName()
+                + "' and '"
+                + (type2 == null ? "null" : type2.getName())
+                + "'!");
         return null;
       }
     } else if (!type1.equals(type2)) {
       System.err.println(
-              "Types '" + type1.getName() + "' and '" + type2.getName() + "' do not match!");
+          "Types '" + type1.getName() + "' and '" + type2.getName() + "' do not match!");
       return null;
     }
     return (Symbol) type1;
   }
+
   @Override
   public Symbol visit(BindingNode bindingNode) {
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(bindingNode.getObjcalls())) return null;
-    String id = bindingNode.getIdentifierNode().getIdNode().getId();
-    Symbol symbol = this.currentScope.resolve(id);
-    if (symbol == null) {
-      System.err.println("Symbol " + id + " could not be found!");
+    STType varType = null;
+    if (bindingNode.hasArracc()) {
+      varType = (STType) bindingNode.getArraccNode().accept(this);
+    } else {
+      String id = bindingNode.getIdNode().getId();
+      Symbol symbol = this.currentScope.resolve(id);
+      if (symbol == null) {
+        System.err.println("Symbol " + id + " could not be found!");
+        this.currentScope = currentObjScope;
+        return null;
+      }
       this.currentScope = currentObjScope;
-      return null;
-    }
-    this.currentScope = currentObjScope;
-    if (!(symbol instanceof Variable var)) {
-      System.err.println(symbol.getName() + " is not a variable!");
-      return null;
+      if (!(symbol instanceof Variable var)) {
+        System.err.println(symbol.getName() + " is not a variable!");
+        return null;
+      }
+      varType = var.getType();
     }
     if (!bindingNode.getAssignop().equals("=")) {
       // Check symbol type (int)
-      if (!var.getType().equals(this.builtInInt)) {
+      if (!varType.equals(this.builtInInt)) {
         System.err.println(
-            "Assign operator " + bindingNode.getAssignop() + " can only be used with type 'int'!");
+                "Assign operator " + bindingNode.getAssignop() + " can only be used with type 'int'!");
         return null;
       }
     }
     // Compare Variable Type and Expr Type
     Symbol exprSymbol = bindingNode.getExpr().accept(this);
-    if(exprSymbol == null){
+    if (exprSymbol == null) {
       // Error will be handled in expr
       return null;
     }
-    STType varType = var.getType();
     return compareTypes(varType, (STType) exprSymbol);
   }
 
@@ -138,7 +145,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
       return (Symbol) type;
     }
-    if(objcallNode.getArracNode() != null){
+    if (objcallNode.getArracNode() != null) {
       return objcallNode.getArracNode().accept(this);
     }
     return objcallNode.getFncallNode().accept(this);
@@ -165,17 +172,17 @@ public class STBuilder implements ASTVisitor<Symbol> {
       System.err.println(vardeclNode.getType().getClassName() + " is not a valid type!");
       return null;
     }
-    if(vardeclNode.isArray()){
-      //Override type to array type
+    if (vardeclNode.isArray()) {
+      // Override type to array type
       type = new Array(vardeclNode.getIdentifier().getDimension(), type);
     }
     if (vardeclNode.getExpr() != null) {
       Symbol exprType = vardeclNode.getExpr().accept(this);
-      if(exprType == null) {
+      if (exprType == null) {
         // Error will be handled in expr
         return null;
       }
-      if (compareTypes(type,(STType) exprType) == null) {
+      if (compareTypes(type, (STType) exprType) == null) {
         return null;
       }
     }
@@ -253,7 +260,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
           // Error will be handled in visit expr
           return null;
         }
-        if(paramNode.getIdentifier().isArray()) {
+        if (paramNode.getIdentifier().isArray()) {
           paramType = new Array(paramNode.getIdentifier().getDimension(), (STType) paramType);
         }
         if (compareTypes((STType) paramType, (STType) argumentType) == null) {
@@ -292,7 +299,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
           if (paramNodeOld.getTypeNode().getType() != paramNodeNew.getTypeNode().getType()) {
             overloadFunction = true;
             break;
-          } else if (paramNodeOld.getIdentifier().isArray() != paramNodeNew.getIdentifier().isArray())  {
+          } else if (paramNodeOld.getIdentifier().isArray()
+              != paramNodeNew.getIdentifier().isArray()) {
             overloadFunction = true;
             break;
           }
@@ -509,25 +517,25 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ArgsNode argsNode) {
-    if(argsNode.isArrVals()){
+    if (argsNode.isArrVals()) {
       Symbol type = null;
-      for(var argument : argsNode.getArguments()){
+      for (var argument : argsNode.getArguments()) {
         Symbol symbol = argument.accept(this);
-        if(symbol == null){
+        if (symbol == null) {
           // Error will be handled in Expr
           return null;
         }
-        if(type == null){
+        if (type == null) {
           type = symbol;
-        }else{
-          if(compareTypes((STType) type, (STType) symbol) == null){
+        } else {
+          if (compareTypes((STType) type, (STType) symbol) == null) {
             // Error will be handled in compareTypes
             return null;
           }
         }
       }
       int dim = 1;
-      if(type instanceof Array array){
+      if (type instanceof Array array) {
         dim += array.getDimension();
       }
       return type != null ? new Array(dim, type.getType()) : null;
@@ -543,7 +551,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
           "Invalid type of parameter " + paramNode.getIdentifier().getIdNode().getId() + "!");
       return null;
     }
-    if(paramNode.getIdentifier().isArray()){
+    if (paramNode.getIdentifier().isArray()) {
       type = new Array(paramNode.getIdentifier().getDimension(), (STType) type);
     }
     return new Variable(paramNode.getIdentifier().getIdNode().getId(), (STType) type);
@@ -596,7 +604,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
           this.currentScope = currentObjScope;
           return null;
         }
-        if(paramNode.getIdentifier().isArray()) {
+        if (paramNode.getIdentifier().isArray()) {
           paramType = new Array(paramNode.getIdentifier().getDimension(), (STType) paramType);
         }
         if (compareTypes((STType) paramType, (STType) argumentType) == null) {
@@ -617,6 +625,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(OBJMEMNode objmemNode) {
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(objmemNode.getObjcalls())) return null;
+    if (objmemNode.hasArraccNode()) {
+      Symbol type = objmemNode.getArraccNode().accept(this);
+      this.currentScope = currentObjScope;
+      return type;
+    }
     Symbol symbol = this.currentScope.resolve(objmemNode.getIdNode().getId());
     this.currentScope = currentObjScope;
     if (!(symbol instanceof Variable variable)) {
@@ -759,25 +772,25 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(ARRACCNode arraccNode) {
     Symbol symbol = currentScope.resolve(arraccNode.getIdNode().getId());
-    if(symbol == null) {
+    if (symbol == null) {
       System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
       return null;
     }
-    if(!(symbol instanceof Variable variable)) {
+    if (!(symbol instanceof Variable variable)) {
       System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
       return null;
-
     }
-    if(!(variable.getType() instanceof Array array)) {
-      System.err.println("Cannot access index of non array variable " + arraccNode.getIdNode().getId());
+    if (!(variable.getType() instanceof Array array)) {
+      System.err.println(
+          "Cannot access index of non array variable " + arraccNode.getIdNode().getId());
       return null;
     }
-    if(arraccNode.getDimension() > array.getDimension()){
+    if (arraccNode.getDimension() > array.getDimension()) {
       System.err.println("Dimension mismatch in " + arraccNode.getIdNode().getId());
       return null;
     }
-    for(var expr : arraccNode.getExprNodes()){
-      if(!this.builtInInt.equals(expr.accept(this))){
+    for (var expr : arraccNode.getExprNodes()) {
+      if (!this.builtInInt.equals(expr.accept(this))) {
         System.err.println("Cannot access index of array with non int type expression!");
         return null;
       }
@@ -859,7 +872,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
           if (paramNodeOld.getTypeNode().getType() != paramNodeNew.getTypeNode().getType()) {
             overloadConstructor = true;
             break;
-          } else if (paramNodeOld.getIdentifier().isArray() != paramNodeNew.getIdentifier().isArray())  {
+          } else if (paramNodeOld.getIdentifier().isArray()
+              != paramNodeNew.getIdentifier().isArray()) {
             overloadConstructor = true;
             break;
           }

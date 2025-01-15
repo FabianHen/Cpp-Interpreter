@@ -1,7 +1,5 @@
 package AST;
 
-import java.util.List;
-
 public class ObjcallNode extends ASTNode {
   // Fields
   private IDNode idNode;
@@ -20,7 +18,7 @@ public class ObjcallNode extends ASTNode {
     if (fncallNode != null) {
       addChild(fncallNode);
     }
-    if(arracNode != null) {
+    if (arracNode != null) {
       addChild(arracNode);
     }
   }

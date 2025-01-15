@@ -27,7 +27,7 @@ public class ARRACCNode extends ExprNode {
     return this.exprNodes;
   }
 
-  public int getDimension(){
+  public int getDimension() {
     return this.exprNodes.size();
   }
 

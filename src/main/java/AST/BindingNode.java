@@ -6,7 +6,7 @@ public class BindingNode extends ASTNode {
   // Fields
   private List<ObjcallNode> objcalls;
 
-  private IdentifierNode identifierNode;
+  private IDNode idNode;
   private ARRACCNode arraccNode;
 
   private String assignop;
@@ -16,14 +16,14 @@ public class BindingNode extends ASTNode {
   // Constructor
   public BindingNode(
       List<ObjcallNode> objcalls,
-      IdentifierNode identifierNode,
+      IDNode idNode,
       String assignop,
       ExprNode expr,
       boolean hasThis,
       ARRACCNode arraccNode) {
     super();
     this.objcalls = objcalls;
-    this.identifierNode = identifierNode;
+    this.idNode = idNode;
     this.assignop = assignop;
     this.expr = expr;
     this.hasThis = hasThis;
@@ -31,8 +31,8 @@ public class BindingNode extends ASTNode {
     for (ObjcallNode child : objcalls) {
       addChild(child);
     }
-    if(identifierNode != null) {
-      addChild(identifierNode);
+    if (idNode != null) {
+      addChild(idNode);
     } else if (arraccNode != null) {
       addChild(arraccNode);
     }
@@ -48,19 +48,22 @@ public class BindingNode extends ASTNode {
     return this.objcalls;
   }
 
-  public IdentifierNode getIdentifierNode() {
-    return this.identifierNode;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
   public String getAssignop() {
     return this.assignop;
   }
+
   public ARRACCNode getArraccNode() {
     return this.arraccNode;
   }
-  public boolean hasArracc(){
+
+  public boolean hasArracc() {
     return this.arraccNode != null;
   }
+
   public ExprNode getExpr() {
     return this.expr;
   }

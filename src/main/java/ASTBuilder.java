@@ -105,7 +105,15 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
-    return new OBJMEMNode(objcalls, idNode, ctx.THIS() != null);
+    if (!ctx.LEFTBRACKET().isEmpty())
+    {
+      List<ExprNode> exprs = new ArrayList<>();
+      for (var expr : ctx.expr()) {
+        exprs.add((ExprNode) visit(expr));
+      }
+      return new OBJMEMNode(objcalls, null, ctx.THIS() != null, new ARRACCNode(idNode, exprs));
+    }
+    return new OBJMEMNode(objcalls, idNode, ctx.THIS() != null, null);
   }
 
   @Override
@@ -211,15 +219,23 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
-    IdentifierNode identifierNode = (IdentifierNode) visit(ctx.identifier());
-    ExprNode exprNode = (ExprNode) visit(ctx.expr());
+    IDNode idNode = new IDNode(ctx.ID().getText());
+    ARRACCNode arraccNode = null;
+    if (!ctx.LEFTBRACKET().isEmpty()) {
+      List<ExprNode> exprs = new ArrayList<>();
+      for (int i = 0; i < ctx.LEFTBRACKET().size(); i++) {
+        exprs.add((ExprNode) visit(ctx.expr(i)));
+      }
+      arraccNode = new ARRACCNode(idNode, exprs);
+      idNode = null;
+    }
     return new BindingNode(
         objcalls,
-        identifierNode,
+        idNode,
         ctx.assignop().getChild(0).getText(),
-        (ExprNode) visit(ctx.expr()),
+        (ExprNode) visit(ctx.exprR),
         ctx.THIS() != null,
-            null);
+        arraccNode);
   }
 
   @Override
@@ -234,7 +250,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
     }
     IDNode idNode = new IDNode(ctx.ID().getText());
     // Is Array access
-    if(!ctx.LEFTBRACKET().isEmpty()) {
+    if (!ctx.LEFTBRACKET().isEmpty()) {
       return new ObjcallNode(null, null, new ARRACCNode(idNode, exprNodes));
     }
     // Is Id

@@ -48,7 +48,7 @@ expr
     |   INT                         #INT
     |   ID                          #ID
     |   ('(''*'THIS')' ('.'))? objcall* fncall #FNCALLWRAP
-    |   ('(''*'THIS')' ('.'))? objcall* ID     #OBJMEM //TODO: Add Array Access
+    |   ('(''*'THIS')' ('.'))? objcall* ID (LEFTBRACKET expr RIGHTBRACKET)*    #OBJMEM //TODO: Add Array Access
     ;
 
 // STMT
@@ -79,7 +79,7 @@ virtual
     ;
 
 binding
-    :   ('(''*'THIS')' ('.'))? (objcall)* identifier assignop expr
+    :   ('(''*'THIS')' ('.'))? (objcall)* ID (LEFTBRACKET expr RIGHTBRACKET)* assignop exprR = expr
     ;
 
 objcall
