@@ -5,8 +5,6 @@ public interface ASTVisitor<T> {
 
   T visit(ClassDefNode classDefNode);
 
-  T visit(DestructorNode destructorNode);
-
   T visit(BindingNode bindingNode);
 
   T visit(ObjcallNode objcallNode);
@@ -49,7 +47,7 @@ public interface ASTVisitor<T> {
 
   T visit(OBJMEMNode objmemNode);
 
-  T visit(NEWNode newNode);
+  T visit(OperatorNode operatorNode);
 
   T visit(MULNode mulNode);
 

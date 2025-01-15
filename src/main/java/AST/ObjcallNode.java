@@ -6,22 +6,22 @@ public class ObjcallNode extends ASTNode {
   // Fields
   private IDNode idNode;
   private FncallNode fncallNode;
-  private List<ExprNode> indices;
+  private ARRACCNode arracNode;
 
   // Constructor
-  public ObjcallNode(IDNode idNode, FncallNode fncallNode, List<ExprNode> indices) {
+  public ObjcallNode(IDNode idNode, FncallNode fncallNode, ARRACCNode arracNode) {
     super();
     this.idNode = idNode;
     this.fncallNode = fncallNode;
-    this.indices = indices;
-    for (var index : indices) {
-      addChild(index);
-    }
+    this.arracNode = arracNode;
     if (idNode != null) {
       addChild(idNode);
     }
     if (fncallNode != null) {
       addChild(fncallNode);
+    }
+    if(arracNode != null) {
+      addChild(arracNode);
     }
   }
 
@@ -34,24 +34,12 @@ public class ObjcallNode extends ASTNode {
     return this.fncallNode;
   }
 
+  public ARRACCNode getArracNode() {
+    return this.arracNode;
+  }
+
   public boolean isFunctionCall() {
     return fncallNode != null;
-  }
-
-  public List<ExprNode> getIndices() {
-    return indices;
-  }
-
-  public ExprNode getIndex(int index) {
-    return indices.get(index);
-  }
-
-  public boolean isArray() {
-    return getDimension() > 0;
-  }
-
-  public int getDimension() {
-    return indices.size();
   }
 
   @Override

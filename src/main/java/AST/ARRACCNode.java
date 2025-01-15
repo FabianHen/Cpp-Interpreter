@@ -4,31 +4,35 @@ import java.util.*;
 
 public class ARRACCNode extends ExprNode {
   // Fields
-  private ExprNode expr;
-  private List<ExprNode> indices;
+  private IDNode idNode;
+  private List<ExprNode> exprNodes;
 
   // Constructor
-  public ARRACCNode(ExprNode expr, List<ExprNode> indices) {
+  public ARRACCNode(IDNode idNode, List<ExprNode> exprNodes) {
     super();
-    this.expr = expr;
-    this.indices = indices;
-    addChild(expr);
-    for (ExprNode child : indices) {
+    this.idNode = idNode;
+    this.exprNodes = exprNodes;
+    addChild(idNode);
+    for (ExprNode child : exprNodes) {
       addChild(child);
     }
   }
 
   // Getters and Setters
-  public ExprNode getExpr() {
-    return this.expr;
+  public IDNode getIdNode() {
+    return this.idNode;
   }
 
-  public List<ExprNode> getIndices() {
-    return this.indices;
+  public List<ExprNode> getExprNodes() {
+    return this.exprNodes;
+  }
+
+  public int getDimension(){
+    return this.exprNodes.size();
   }
 
   public ExprNode getExprNode(int index) {
-    return this.indices.get(index);
+    return this.exprNodes.get(index);
   }
 
   @Override

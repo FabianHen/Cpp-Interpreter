@@ -5,11 +5,13 @@ import java.util.*;
 public class ReturnNode extends ASTNode {
   // Fields
   private ExprNode expr;
+  private boolean hasThis;
 
   // Constructor
-  public ReturnNode(ExprNode expr) {
+  public ReturnNode(ExprNode expr, boolean hasThis) {
     super();
     this.expr = expr;
+    this.hasThis = hasThis;
 
     if (expr != null) {
       addChild(expr);
@@ -19,6 +21,10 @@ public class ReturnNode extends ASTNode {
   // Getters and Setters
   public ExprNode getExpr() {
     return this.expr;
+  }
+
+  public boolean hasThis() {
+    return this.hasThis;
   }
 
   @Override

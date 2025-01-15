@@ -39,7 +39,7 @@ expr
     |   e1 = expr '<=' e2 = expr    #LEAQUALS
     |   e1 = expr '&&' e2 = expr    #AND
     |   e1 = expr '||' e2 = expr    #OR
-    |   expr (LEFTBRACKET expr RIGHTBRACKET)+        #ARRACC
+    |   ID (LEFTBRACKET expr RIGHTBRACKET)+        #ARRACC
     |   '{'args'}'                  #ARRVALS
     |   incDec                      #INCDECWRAP
     |   NOT expr                    #NOT
@@ -48,7 +48,7 @@ expr
     |   INT                         #INT
     |   ID                          #ID
     |   ('(''*'THIS')' ('.'))? objcall* fncall #FNCALLWRAP
-    |   ('(''*'THIS')' ('.'))? objcall* ID     #OBJMEM
+    |   ('(''*'THIS')' ('.'))? objcall* ID     #OBJMEM //TODO: Add Array Access
     ;
 
 // STMT
@@ -83,7 +83,7 @@ binding
     ;
 
 objcall
-    :   (ID (LEFTBRACKET expr RIGHTBRACKET)*|fncall)  ('.'|'->')
+    :   (ID (LEFTBRACKET expr RIGHTBRACKET)*|fncall)  ('.')
     ;
 
 fncall
@@ -99,7 +99,7 @@ constructorCall
     ;
 
 fndecl
-    :   (type (LEFTBRACKET RIGHTBRACKET)*| 'void') ID '(' (paramlist)? ')'
+    :   (type | 'void') ID '(' (paramlist)? ')'
     ;
     
 constructor
@@ -138,7 +138,6 @@ elseif
 else
     :   'else' block
     ;
-
 //HELP
 identifier
     :   '&'? ID

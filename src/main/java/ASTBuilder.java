@@ -25,11 +25,6 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   }
 
   @Override
-  public ASTNode visitNEW(CppParser.NEWContext ctx) {
-    return new NEWNode(new IDNode(ctx.ID().getText()), (ArgsNode) visit(ctx.args()));
-  }
-
-  @Override
   public ASTNode visitADD(CppParser.ADDContext ctx) {
     return new ADDNode((ExprNode) visit(ctx.e1), (ExprNode) visit(ctx.e2));
   }
@@ -56,12 +51,11 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitARRACC(CppParser.ARRACCContext ctx) {
-    ExprNode expr = (ExprNode) visit(ctx.expr(0));
-    List<ExprNode> indices = new ArrayList<ExprNode>();
-    for (int i = 1; i < ctx.expr().size(); i++) {
-      indices.add((ExprNode) visit(ctx.expr(i)));
+    List<ExprNode> indices = new ArrayList<>();
+    for (var expr : ctx.expr()) {
+      indices.add((ExprNode) visit(expr));
     }
-    return new ARRACCNode(expr, indices);
+    return new ARRACCNode(new IDNode(ctx.ID().getText()), indices);
   }
 
   @Override
@@ -162,7 +156,9 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitARRVALS(CppParser.ARRVALSContext ctx) {
-    return visit(ctx.args());
+    ArgsNode argsNode = (ArgsNode) visit(ctx.args());
+    argsNode.setArrVals(true);
+    return argsNode;
   }
 
   @Override
@@ -184,6 +180,15 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   }
 
   @Override
+  public ASTNode visitOperator(CppParser.OperatorContext ctx) {
+    return new OperatorNode(
+        new IDNode(ctx.returnType.getText()),
+        new IDNode(ctx.paramType.getText()),
+        new IDNode(ctx.paramName.getText()),
+        (BlockNode) visit(ctx.block()));
+  }
+
+  @Override
   public ASTNode visitOverrideFndecl(CppParser.OverrideFndeclContext ctx) {
     return new OverrideFndeclNode((FndeclNode) visit(ctx.fndecl()), ctx.getChildCount() > 1);
   }
@@ -201,24 +206,20 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   }
 
   @Override
-  public ASTNode visitDestructor(CppParser.DestructorContext ctx) {
-    return new DestructorNode(
-        new IDNode(ctx.ID().getText()),
-        (BlockNode) visit(ctx.block()),
-        ctx.getChild(0).getText().equals("virtual"));
-  }
-
-  @Override
   public ASTNode visitBinding(CppParser.BindingContext ctx) {
     List<ObjcallNode> objcalls = new ArrayList<>();
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
+    IdentifierNode identifierNode = (IdentifierNode) visit(ctx.identifier());
+    ExprNode exprNode = (ExprNode) visit(ctx.expr());
     return new BindingNode(
         objcalls,
-        (IdentifierNode) visit(ctx.identifier()),
+        identifierNode,
         ctx.assignop().getChild(0).getText(),
-        (ExprNode) visit(ctx.expr()));
+        (ExprNode) visit(ctx.expr()),
+        ctx.THIS() != null,
+            null);
   }
 
   @Override
@@ -227,10 +228,17 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
     for (var expr : ctx.expr()) {
       exprNodes.add((ExprNode) visit(expr));
     }
+    // Is Function call
     if (ctx.ID() == null) {
-      return new ObjcallNode(null, (FncallNode) visit(ctx.fncall()), exprNodes);
+      return new ObjcallNode(null, (FncallNode) visit(ctx.fncall()), null);
     }
-    return new ObjcallNode(new IDNode(ctx.ID().getText()), null, exprNodes);
+    IDNode idNode = new IDNode(ctx.ID().getText());
+    // Is Array access
+    if(!ctx.LEFTBRACKET().isEmpty()) {
+      return new ObjcallNode(null, null, new ARRACCNode(idNode, exprNodes));
+    }
+    // Is Id
+    return new ObjcallNode(idNode, null, null);
   }
 
   @Override
@@ -291,9 +299,9 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
   @Override
   public ASTNode visitReturn(CppParser.ReturnContext ctx) {
     if (ctx.expr() != null) {
-      return new ReturnNode((ExprNode) visit(ctx.expr()));
+      return new ReturnNode((ExprNode) visit(ctx.expr()), false);
     }
-    return new ReturnNode(null);
+    return new ReturnNode(null, ctx.THIS() != null);
   }
 
   @Override

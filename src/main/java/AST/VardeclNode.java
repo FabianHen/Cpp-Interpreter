@@ -31,6 +31,10 @@ public class VardeclNode extends ASTNode {
     return this.identifier;
   }
 
+  public boolean isArray() {
+    return this.identifier.isArray();
+  }
+
   public ExprNode getExpr() {
     return this.expr;
   }
