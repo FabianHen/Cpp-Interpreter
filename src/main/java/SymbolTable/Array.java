@@ -1,6 +1,6 @@
 package SymbolTable;
 
-public class Array implements Symbol, STType {
+public class Array implements STType {
   private String name;
   private STType type;
   private Scope scope;

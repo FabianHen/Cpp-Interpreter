@@ -1,7 +1,7 @@
 package SymbolTable;
 
 // TODO: Could be combined with Variable class
-public class BuiltIn implements STType, Symbol {
+public class BuiltIn implements STType {
   private String name;
   private STType type;
   private Scope scope;

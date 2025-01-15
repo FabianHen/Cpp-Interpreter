@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class STBuilder implements ASTVisitor<Symbol> {
-  // TODO: Refactor class hierarchy of STType
   private Scope currentScope;
   private final BuiltIn builtInVoid = new BuiltIn("void");
   private final BuiltIn builtInInt = new BuiltIn("int");
@@ -88,7 +87,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
           "Types '" + type1.getName() + "' and '" + type2.getName() + "' do not match!");
       return null;
     }
-    return (Symbol) type1;
+    return type1;
   }
 
   @Override
@@ -143,7 +142,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       if (type instanceof STClass stClass) {
         return stClass;
       }
-      return (Symbol) type;
+      return type;
     }
     if (objcallNode.getArracNode() != null) {
       return objcallNode.getArracNode().accept(this);
@@ -270,7 +269,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       Variable var =
           new Variable(constructorCallNode.getInstancename().getId(), constructor.getType());
       currentScope.bind(var);
-      return (Symbol) constructor.getType();
+      return constructor.getType();
     } else {
       System.err.println("Constructor parameters do not match!");
       return null;
@@ -613,7 +612,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
         }
       }
       this.currentScope = currentObjScope;
-      return (Symbol) function.getType();
+      return function.getType();
     } else {
       System.err.println("Function parameters do not match!");
       this.currentScope = currentObjScope;
@@ -636,7 +635,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       System.err.println("Variable " + symbol.getName() + " could not be resolved!");
       return null;
     }
-    return (Symbol) variable.getType();
+    return variable.getType();
   }
 
   @Override
@@ -796,7 +795,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
     }
     int newDimension = array.getDimension() - arraccNode.getDimension();
-    return newDimension == 0 ? (Symbol) array.getType() : new Array(newDimension, array.getType());
+    return newDimension == 0 ? array.getType() : new Array(newDimension, array.getType());
   }
 
   @Override
@@ -831,8 +830,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       System.err.println("Couldn't find variable " + idNode.getId());
       return null;
     }
-    STType type = var.getType();
-    return (Symbol) type;
+    return var.getType();
   }
 
   @Override

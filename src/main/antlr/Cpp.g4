@@ -48,7 +48,7 @@ expr
     |   INT                         #INT
     |   ID                          #ID
     |   ('(''*'THIS')' ('.'))? objcall* fncall #FNCALLWRAP
-    |   ('(''*'THIS')' ('.'))? objcall* ID (LEFTBRACKET expr RIGHTBRACKET)*    #OBJMEM //TODO: Add Array Access
+    |   ('(''*'THIS')' ('.'))? objcall* ID (LEFTBRACKET expr RIGHTBRACKET)*    #OBJMEM
     ;
 
 // STMT

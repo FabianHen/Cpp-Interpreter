@@ -1,6 +1,6 @@
 package SymbolTable;
 
-public class STClass extends Scope implements STType, Symbol {
+public class STClass extends Scope implements STType {
   private String name;
   private STType type;
   private Scope scope;

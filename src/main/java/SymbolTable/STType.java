@@ -1,6 +1,5 @@
 package SymbolTable;
 
-public interface STType {
+public interface STType extends Symbol{
 
-  public String getName();
 }
