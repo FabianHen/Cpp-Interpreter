@@ -13,10 +13,8 @@ public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mi
     int aval;
 };
 
-class B : public A {
+class B : A {
 public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
-    // C'tor muss Basisklasse initialisieren
-    B(int x) : A(x+3) { bval = x; }
 
     // überschriebene Methode aus A
     void foo() { print_char('B'); print_char('f'); print_int(aval); print_int(bval); }

@@ -13,10 +13,13 @@ public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mi
     int aval;
 };
 
-class B : public A {
+class B : A {
 public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
     // C'tor muss Basisklasse initialisieren
-    B(int x) : A(x+3) { bval = x; }
+    B(int x) {
+         A(x+3);
+         bval = x;
+    }
 
     // überschriebene Methode aus A
     virtual void foo() { print_char('B'); print_char('f'); print_int(aval); print_int(bval); }
@@ -27,10 +30,13 @@ public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mi
     int bval;
 };
 
-class C : public B {
+class C : B {
 public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
     // C'tor muss Basisklasse initialisieren
-    C(int x) : B(x+9) { cval = x; }
+    C(int x){
+        B(x+9);
+        cval = x;
+    }
 
     // überschriebene Methode aus B
     void foo() { print_char('C'); print_char('f'); print_int(aval); print_int(bval); print_int(cval); }

@@ -13,7 +13,8 @@ stmt
     ;
 
 blockStmt
-    :   binding ';'
+    :   block
+    |   binding ';'
     |   vardecl ';'
     |   return ';'
     |   constructorCall ';'
@@ -25,8 +26,7 @@ blockStmt
 
 
 expr
-    :   'new' ID  '(' args? ')'     #NEW
-    |   '(' expr ')'                #COL
+    :   '(' expr ')'                #COL
     |   e1 = expr '*' e2 = expr     #MUL
     |   e1 = expr '/' e2 = expr     #DIV
     |   e1 = expr '+' e2 = expr     #ADD
@@ -47,8 +47,8 @@ expr
     |   CHAR                        #CHAR
     |   INT                         #INT
     |   ID                          #ID
-    |   (THIS ('.'|'->'))? objcall* fncall #FNCALLWRAP
-    |   (THIS ('.'|'->'))? objcall* ID     #OBJMEM
+    |   ('(''*'THIS')' ('.'))? objcall* fncall #FNCALLWRAP
+    |   ('(''*'THIS')' ('.'))? objcall* ID     #OBJMEM
     ;
 
 // STMT
@@ -59,11 +59,15 @@ classDef
 classMember
     :   overrideFndecl ';'
     |   fndef
-    |   destructor
     |   virtual
     |   vardecl ';'
     |   overrideFndef
     |   constructor
+    |   operator
+    ;
+
+operator
+    :   returnType=ID '&' 'operator=' '(' paramType=ID '&' paramName=ID ')' block
     ;
 
 overrideFndecl
@@ -73,12 +77,9 @@ overrideFndecl
 virtual
     :   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
     ;
-destructor
-    :   'virtual'? '~' ID '(' ')' block
-    ;
 
 binding
-    :   (objcall)* identifier assignop expr
+    :   ('(''*'THIS')' ('.'))? (objcall)* identifier assignop expr
     ;
 
 objcall
@@ -98,14 +99,14 @@ constructorCall
     ;
 
 fndecl
-    :   (type | 'void') ID '(' (paramlist)? ')'
+    :   (type (LEFTBRACKET RIGHTBRACKET)*| 'void') ID '(' (paramlist)? ')'
     ;
     
 constructor
     :   ID '(' (paramlist)? ')' block;
 
 return
-    :   'return' expr?
+    :   'return' (expr|('*'THIS))?
     ;
 
 fndef
@@ -209,3 +210,4 @@ RIGHTBRACKET: ']';
 ID  :   [a-zA-Z][a-zA-Z0-9_]*;
 WS  :   [ \t\n\r]+ -> skip;
 COMMENT :   '//' ~[\n\r]* -> skip;
+MULTI_LINE_COMMENT : '/*' .*? '*/' -> skip;
