@@ -53,12 +53,11 @@ expr
 
 // STMT
 classDef
-    :   'class' cName=ID (':' pName=ID )? '{' 'public:'? classMember* '}'
+    :   'class' cName=ID (':' 'public'? pName=ID )? '{' 'public:'? classMember* '}'
     ;
 
 classMember
     :   overrideFndecl ';'
-    |   fndef
     |   virtual
     |   vardecl ';'
     |   overrideFndef
@@ -71,11 +70,12 @@ operator
     ;
 
 overrideFndecl
-    :   fndecl 'override'?
+    :   fndecl OVERRIDE?
     ;
 
 virtual
-    :   'virtual' ((fndecl (EQUSIGN INT)? ';')|fndef)
+    // TODO: abstract classes?
+    :   'virtual' ((overrideFndecl ';')|overrideFndef)
     ;
 
 binding
@@ -114,7 +114,7 @@ fndef
     ;
 
 overrideFndef
-    :   fndecl 'override' block
+    :   overrideFndecl block
     ;
 
 print
@@ -205,6 +205,8 @@ BOOL
 
 LEFTBRACKET: '[';
 RIGHTBRACKET: ']';
+
+OVERRIDE: 'override';
 
 ID  :   [a-zA-Z][a-zA-Z0-9_]*;
 WS  :   [ \t\n\r]+ -> skip;

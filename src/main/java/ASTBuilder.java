@@ -105,8 +105,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
     for (var objcall : ctx.objcall()) {
       objcalls.add((ObjcallNode) visit(objcall));
     }
-    if (!ctx.LEFTBRACKET().isEmpty())
-    {
+    if (!ctx.LEFTBRACKET().isEmpty()) {
       List<ExprNode> exprs = new ArrayList<>();
       for (var expr : ctx.expr()) {
         exprs.add((ExprNode) visit(expr));
@@ -198,19 +197,21 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitOverrideFndecl(CppParser.OverrideFndeclContext ctx) {
-    return new OverrideFndeclNode((FndeclNode) visit(ctx.fndecl()), ctx.getChildCount() > 1);
+    FndeclNode fndeclNode = (FndeclNode) visit(ctx.fndecl());
+    fndeclNode.setOverride(ctx.OVERRIDE() != null);
+    return fndeclNode;
   }
 
   @Override
   public ASTNode visitVirtual(CppParser.VirtualContext ctx) {
-    if (ctx.getChildCount() == 2) {
-      return new VirtualNode(null, -1, false, (FndefNode) visit(ctx.fndef()));
+    if (ctx.overrideFndef() != null) {
+      FndefNode fndefNode = (FndefNode) visit(ctx.overrideFndef());
+      fndefNode.getFndecl().setVirtual(true);
+      return fndefNode;
     }
-    if (ctx.INT() != null) {
-      return new VirtualNode(
-          (FndeclNode) visit(ctx.fndecl()), Integer.parseInt(ctx.INT().getText()), true, null);
-    }
-    return new VirtualNode((FndeclNode) visit(ctx.fndecl()), -1, false, null);
+    FndeclNode fndeclNode = (FndeclNode) visit(ctx.overrideFndecl());
+    fndeclNode.setVirtual(true);
+    return fndeclNode;
   }
 
   @Override
@@ -327,7 +328,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitOverrideFndef(CppParser.OverrideFndefContext ctx) {
-    return new OverrideFndefNode((FndeclNode) visit(ctx.fndecl()), (BlockNode) visit(ctx.block()));
+    return new FndefNode((FndeclNode) visit(ctx.overrideFndecl()), (BlockNode) visit(ctx.block()));
   }
 
   @Override

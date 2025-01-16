@@ -1,5 +1,3 @@
 package SymbolTable;
 
-public interface STType extends Symbol{
-
-}
+public interface STType extends Symbol {}

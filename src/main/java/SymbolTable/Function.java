@@ -6,14 +6,15 @@ import java.util.List;
 public class Function extends Scope implements Symbol {
   private String name;
   private STType type;
-  private Scope scope;
   private List<ParamNode> params;
+  private boolean isVirtual;
 
-  public Function(String name, STType type, Scope parent, List<ParamNode> params) {
-    super(parent);
+  public Function(String name, STType type, Scope definingScope, List<ParamNode> params, boolean isVirtual) {
+    super(definingScope);
     this.name = name;
     this.type = type;
     this.params = params;
+    this.isVirtual = isVirtual;
   }
 
   @Override
@@ -28,7 +29,7 @@ public class Function extends Scope implements Symbol {
 
   @Override
   public Scope getScope() {
-    return this.scope;
+    return this.parent;
   }
 
   public List<ParamNode> getParams() {
@@ -39,8 +40,12 @@ public class Function extends Scope implements Symbol {
     return this.params.get(i);
   }
 
+  public boolean isVirtual() {
+    return this.isVirtual;
+  }
+
   @Override
   public void setScope(Scope scope) {
-    this.scope = scope;
+    this.parent = scope;
   }
 }

@@ -19,8 +19,6 @@ public interface ASTVisitor<T> {
 
   T visit(FndefNode fndefNode);
 
-  T visit(OverrideFndefNode overrideFndefNode);
-
   T visit(PrintNode printNode);
 
   T visit(WhileNode whileNode);
@@ -84,10 +82,6 @@ public interface ASTVisitor<T> {
   T visit(INTNode intNode);
 
   T visit(IDNode idNode);
-
-  T visit(OverrideFndeclNode overrideFndeclNode);
-
-  T visit(VirtualNode virtualNode);
 
   T visit(ConstructorNode constructorNode);
 }

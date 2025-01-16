@@ -7,6 +7,8 @@ public class FndeclNode extends ASTNode {
   private TypeNode returnType;
   private IDNode idNode;
   private List<ParamNode> params;
+  private boolean isVirtual;
+  private boolean isOverride;
 
   // Constructor
   public FndeclNode(TypeNode returnType, IDNode idNode, List<ParamNode> params) {
@@ -14,7 +16,8 @@ public class FndeclNode extends ASTNode {
     this.returnType = returnType;
     this.idNode = idNode;
     this.params = params;
-
+    this.isVirtual = false;
+    this.isOverride = false;
     addChild(returnType);
     addChild(idNode);
   }
@@ -34,6 +37,22 @@ public class FndeclNode extends ASTNode {
 
   public ParamNode getParamNode(int index) {
     return this.params.get(index);
+  }
+
+  public boolean isOverride() {
+    return isOverride;
+  }
+
+  public void setOverride(boolean override) {
+    isOverride = override;
+  }
+
+  public boolean isVirtual() {
+    return isVirtual;
+  }
+
+  public void setVirtual(boolean virtual) {
+    isVirtual = virtual;
   }
 
   @Override

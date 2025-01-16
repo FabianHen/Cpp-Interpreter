@@ -1,9 +1,23 @@
-int foo (int a) {
-    return 0;
-}
+class A{
+    A(){}
+    virtual int test();
+};
 
-int main() {
-    foo(2);
-    foo(2, 3);
-    foo(true);
+class B : public A{
+    B(){}
+    int test();
+};
+
+class C  : B{
+    C(){}
+    int test() override;
+};
+
+class D : C{
+    D(){}
+    int test(int a) override; // ERROR
+};
+
+int main(){
+    return 0;
 }
