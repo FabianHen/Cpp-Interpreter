@@ -8,13 +8,16 @@ public class Function extends Scope implements Symbol {
   private STType type;
   private List<ParamNode> params;
   private boolean isVirtual;
+  private boolean hasBeenDefined;
 
-  public Function(String name, STType type, Scope definingScope, List<ParamNode> params, boolean isVirtual) {
+  public Function(
+      String name, STType type, Scope definingScope, List<ParamNode> params, boolean isVirtual) {
     super(definingScope);
     this.name = name;
     this.type = type;
     this.params = params;
     this.isVirtual = isVirtual;
+    this.hasBeenDefined = false;
   }
 
   @Override
@@ -42,6 +45,14 @@ public class Function extends Scope implements Symbol {
 
   public boolean isVirtual() {
     return this.isVirtual;
+  }
+
+  public boolean hasBeenDefined() {
+    return hasBeenDefined;
+  }
+
+  public void setHasBeenDefined(boolean hasBeenDefined) {
+    this.hasBeenDefined = hasBeenDefined;
   }
 
   @Override
