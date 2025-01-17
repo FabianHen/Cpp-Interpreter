@@ -63,9 +63,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   private boolean validateObjectCalls(List<ObjcallNode> objectCalls, boolean hasThis) {
     Scope currentObjScope = this.currentScope;
-    if(hasThis){
+    if (hasThis) {
       Symbol foundClass = findMyClass(currentObjScope);
-      if(foundClass == null){
+      if (foundClass == null) {
         System.err.println("Cannot use 'this' outside of class");
         return false;
       }
@@ -206,7 +206,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(VardeclNode vardeclNode) {
-    if(vardeclNode.getIdentifier().isReference() && !(vardeclNode.getExpr() instanceof IDNode)){
+    if (vardeclNode.getIdentifier().isReference() && !(vardeclNode.getExpr() instanceof IDNode)) {
       System.err.println("Reference has to be defined with Variable!");
       return null;
     }
@@ -317,8 +317,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
-  @Override
-  public Symbol visit(FndeclNode fndeclNode) {
+  private Function checkFunctionCanBeDefined(FndeclNode fndeclNode, boolean isDefinition) {
     // Checking valid return type
     Symbol type = fndeclNode.getReturntype().accept(this);
     if (type == null) {
@@ -329,7 +328,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     Symbol symbol = this.currentScope.resolve(fndeclNode.getIdNode().getId());
     if (symbol instanceof STClass stClass) {
       System.err.println(
-          "Function '" + stClass.getName() + "' cannot have the same name as a class");
+              "Function '" + stClass.getName() + "' cannot have the same name as a class");
     }
     // Check if function can be declared with this params
     List<Symbol> memberSymbols = this.currentScope.resolveAll(fndeclNode.getIdNode().getId());
@@ -337,46 +336,64 @@ public class STBuilder implements ASTVisitor<Symbol> {
     for (var member : memberSymbols) {
       if (!(member instanceof Function foundFunction)) {
         System.err.println(
-            fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!");
+                fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!");
         return null;
       }
       if (fndeclNode.getParams().size() == foundFunction.getParams().size()) {
         if (compareListsOfTypes(fndeclNode.getParams(), foundFunction.getParams(), false)) {
-          if (!foundFunction.isVirtual()) {
-            System.err.println(
-                "Cannot override non virtual function '" + foundFunction.getName() + "'!");
-            return null;
+          if (this.currentScope.equals(foundFunction.getScope())) {
+            if (!isDefinition || foundFunction.hasBeenDefined()) {
+              System.err.println(
+                      "Cannot override function '" + foundFunction.getName() + "' in same class!");
+              return null;
+            }
+            return foundFunction;
           }
-          didOverride = true;
+          else if (!foundFunction.isVirtual()) {
+            System.err.println(
+                    "Cannot override non virtual function '" + foundFunction.getName() + "'!");
+            return null;
+          } else {
+            didOverride = true;
+          }
         }
       }
     }
     // Check if this function needs to override but doesn't
     if (!didOverride && fndeclNode.isOverride()) {
       System.err.println(
-          "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!");
+              "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!");
       return null;
     }
     Function newFunction =
-        new Function(
-            fndeclNode.getIdNode().getId(),
-            (STType) type,
-            this.currentScope,
-            fndeclNode.getParams(),
-            (didOverride || fndeclNode.isVirtual()));
+            new Function(
+                    fndeclNode.getIdNode().getId(),
+                    (STType) type,
+                    this.currentScope,
+                    fndeclNode.getParams(),
+                    (didOverride || fndeclNode.isVirtual()));
     for (var child : fndeclNode.getParams()) {
       Symbol paramType = child.accept(this);
       if (paramType != null) {
-        if(child.getIdentifier().isArray()){
-          paramType = new Array(child.getIdentifier().getDimension(), (STType)paramType);
+        if (child.getIdentifier().isArray()) {
+          paramType = new Array(child.getIdentifier().getDimension(), (STType) paramType);
         }
-        newFunction.bind(new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
+        newFunction.bind(
+                new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
       } else {
         // Error will be handled in TypeNode
         return null;
       }
     }
-    currentScope.bind(newFunction);
+    return newFunction;
+  }
+
+  @Override
+  public Symbol visit(FndeclNode fndeclNode) {
+    Function newFunction = checkFunctionCanBeDefined(fndeclNode, false);
+    if (newFunction != null) {
+      currentScope.bind(newFunction);
+    }
     return newFunction;
   }
 
@@ -444,9 +461,10 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(FndefNode fndefNode) {
     // TODO: Fn declaration and definition dont declare and define (they don't like each other)
     // TODO: Kick FNdec out of class (why would you do that Bjarne)
-    Symbol functionSymbol = fndefNode.getFndecl().accept(this);
-    if (functionSymbol instanceof Function function) {
+    Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), true);
+    if (function != null) {
       function.setHasBeenDefined(true);
+      this.currentScope.bind(function);
       this.currentScope = function;
       fndefNode.getBlock().accept(this);
       this.currentScope = this.currentScope.getParent();
@@ -900,10 +918,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
     for (var child : constructorNode.getParams()) {
       Symbol paramType = child.accept(this);
       if (paramType != null) {
-        if(child.getIdentifier().isArray()){
-          paramType = new Array(child.getIdentifier().getDimension(), (STType)paramType);
+        if (child.getIdentifier().isArray()) {
+          paramType = new Array(child.getIdentifier().getDimension(), (STType) paramType);
         }
-        newConstructor.bind(new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
+        newConstructor.bind(
+            new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
       } else {
         // Error will be handled in TypeNode
         return null;
