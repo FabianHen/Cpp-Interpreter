@@ -13,6 +13,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(ProgramNode programNode) {
     this.currentScope = new Scope(null);
+    programNode.setCurrentScope(this.currentScope);
     this.currentScope.bind(this.builtInInt);
     this.currentScope.bind(this.builtInChar);
     this.currentScope.bind(this.builtInBool);
@@ -32,6 +33,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ClassDefNode classDefNode) {
+    classDefNode.setCurrentScope(this.currentScope);
     Symbol symbol = currentScope.resolve(classDefNode.getIdNode().getId());
     if (symbol != null) {
       System.err.println(classDefNode.getIdNode().getId() + " has already been declared!");
@@ -120,6 +122,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(BindingNode bindingNode) {
+    bindingNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(bindingNode.getObjcalls(), bindingNode.hasThis())) return null;
     STType varType = null;
@@ -169,6 +172,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ObjcallNode objcallNode) {
+    objcallNode.setCurrentScope(this.currentScope);
     if (objcallNode.getIdNode() != null) {
       Symbol symbol = currentScope.resolve(objcallNode.getIdNode().getId());
       if (symbol == null) {
@@ -206,6 +210,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(VardeclNode vardeclNode) {
+    vardeclNode.setCurrentScope(this.currentScope);
     if (vardeclNode.getIdentifier().isReference() && !(vardeclNode.getExpr() instanceof IDNode)) {
       System.err.println("Reference has to be defined with Variable!");
       return null;
@@ -283,6 +288,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ConstructorCallNode constructorCallNode) {
+    constructorCallNode.setCurrentScope(this.currentScope);
     String id = constructorCallNode.getInstancename().getId();
     if (!isAllowedVarID(id)) {
       return null;
@@ -390,6 +396,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(FndeclNode fndeclNode) {
+    fndeclNode.setCurrentScope(this.currentScope);
     Function newFunction = checkFunctionCanBeDefined(fndeclNode, false);
     if (newFunction != null) {
       currentScope.bind(newFunction);
@@ -399,6 +406,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ReturnNode returnNode) {
+    returnNode.setCurrentScope(this.currentScope);
     Function function = findMyFunction(currentScope);
     if (function == null) {
       System.err.println("Cannot use return statement outside of a function!");
@@ -459,6 +467,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(FndefNode fndefNode) {
+    fndefNode.setCurrentScope(this.currentScope);
     // TODO: Fn declaration and definition dont declare and define (they don't like each other)
     // TODO: Kick FNdec out of class (why would you do that Bjarne)
     Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), true);
@@ -476,6 +485,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(PrintNode printNode) {
+    printNode.setCurrentScope(this.currentScope);
     Symbol expressionType = printNode.getExpr().accept(this);
     String printNodeType = printNode.getType().toString().toLowerCase();
     if (expressionType instanceof BuiltIn builtIn) {
@@ -500,6 +510,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(WhileNode whileNode) {
+    whileNode.setCurrentScope(this.currentScope);
     Symbol conditionType = whileNode.getCondition().accept(this);
     boolean result = handleConditionBlock(conditionType, whileNode.getBlock());
     return (result ? conditionType : null);
@@ -507,6 +518,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(IfNode ifNode) {
+    ifNode.setCurrentScope(this.currentScope);
     Symbol conditionType = ifNode.getCondition().accept(this);
     boolean result = handleConditionBlock(conditionType, ifNode.getBlock());
     for (var elif : ifNode.getElseifblocks()) {
@@ -520,6 +532,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ElseifNode elseifNode) {
+    elseifNode.setCurrentScope(this.currentScope);
     Symbol conditionType = elseifNode.getCondition().accept(this);
     boolean result = handleConditionBlock(conditionType, elseifNode.getBlock());
     return (result ? conditionType : null);
@@ -527,6 +540,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ElseNode elseNode) {
+    elseNode.setCurrentScope(this.currentScope);
     this.currentScope = new Scope(currentScope);
     elseNode.getBlock().accept(this);
     this.currentScope = this.currentScope.getParent();
@@ -555,6 +569,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(IncDecNode incDecNode) {
+    incDecNode.setCurrentScope(this.currentScope);
     Symbol symbol = currentScope.resolve(incDecNode.getIdNode().getId());
     if (symbol == null) {
       System.err.println("Could not find Variable " + incDecNode.getIdNode().getId() + "!");
@@ -574,6 +589,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ArgsNode argsNode) {
+    argsNode.setCurrentScope(this.currentScope);
     if (argsNode.isArrVals()) {
       Symbol type = null;
       for (var argument : argsNode.getArguments()) {
@@ -607,6 +623,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ParamNode paramNode) {
+    paramNode.setCurrentScope(this.currentScope);
     Symbol type = paramNode.getTypeNode().accept(this);
     if (type == null) {
       // Error is handled in typeNode
@@ -620,6 +637,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(BlockNode blockNode) {
+    blockNode.setCurrentScope(this.currentScope);
     for (var child : blockNode.getChildren()) {
       child.accept(this);
     }
@@ -628,6 +646,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(TypeNode typeNode) {
+    typeNode.setCurrentScope(this.currentScope);
     Symbol type = currentScope.resolve(typeNode.getClassName());
     if (type instanceof STType) {
       return type;
@@ -642,6 +661,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(FncallNode fncallNode) {
+    fncallNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(fncallNode.getObjcalls(), fncallNode.hasThis())) return null;
     List<Symbol> symbols = this.currentScope.resolveAll(fncallNode.getIdNode().getId());
@@ -667,6 +687,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(OBJMEMNode objmemNode) {
+    objmemNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(objmemNode.getObjcalls(), objmemNode.hasThis())) return null;
     if (objmemNode.hasArraccNode()) {
@@ -685,12 +706,14 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(OperatorNode operatorNode) {
+    operatorNode.setCurrentScope(this.currentScope);
     // TODO
     return null;
   }
 
   @Override
   public Symbol visit(MULNode mulNode) {
+    mulNode.setCurrentScope(this.currentScope);
     Symbol e1Type = mulNode.getE1().accept(this);
     Symbol e2Type = mulNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
@@ -698,6 +721,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(DIVNode divNode) {
+    divNode.setCurrentScope(this.currentScope);
     Symbol e1Type = divNode.getE1().accept(this);
     Symbol e2Type = divNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
@@ -705,6 +729,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ADDNode addNode) {
+    addNode.setCurrentScope(this.currentScope);
     Symbol e1Type = addNode.getE1().accept(this);
     Symbol e2Type = addNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
@@ -712,6 +737,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(SUBNode subNode) {
+    subNode.setCurrentScope(this.currentScope);
     Symbol e1Type = subNode.getE1().accept(this);
     Symbol e2Type = subNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
@@ -719,6 +745,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(EQUALSNode equalsNode) {
+    equalsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = equalsNode.getE1().accept(this);
     Symbol e2Type = equalsNode.getE2().accept(this);
     return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
@@ -726,6 +753,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(NEAQUALSNode neaqualsNode) {
+    neaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = neaqualsNode.getE1().accept(this);
     Symbol e2Type = neaqualsNode.getE2().accept(this);
     return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
@@ -742,6 +770,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(GREATERNode greaterNode) {
+    greaterNode.setCurrentScope(this.currentScope);
     Symbol e1Type = greaterNode.getE1().accept(this);
     Symbol e2Type = greaterNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
@@ -749,6 +778,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(LESSNode lessNode) {
+    lessNode.setCurrentScope(this.currentScope);
     Symbol e1Type = lessNode.getE1().accept(this);
     Symbol e2Type = lessNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
@@ -756,6 +786,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(GEAQUALSNode geaqualsNode) {
+    geaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = geaqualsNode.getE1().accept(this);
     Symbol e2Type = geaqualsNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
@@ -763,6 +794,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(LEAQUALSNode leaqualsNode) {
+    leaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = leaqualsNode.getE1().accept(this);
     Symbol e2Type = leaqualsNode.getE2().accept(this);
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
@@ -783,6 +815,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ANDNode andNode) {
+    andNode.setCurrentScope(this.currentScope);
     Symbol e1Type = andNode.getE1().accept(this);
     Symbol e2Type = andNode.getE2().accept(this);
     if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
@@ -799,6 +832,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ORNode orNode) {
+    orNode.setCurrentScope(this.currentScope);
     Symbol e1Type = orNode.getE1().accept(this);
     Symbol e2Type = orNode.getE2().accept(this);
     if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
@@ -815,6 +849,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ARRACCNode arraccNode) {
+    arraccNode.setCurrentScope(this.currentScope);
     Symbol symbol = currentScope.resolve(arraccNode.getIdNode().getId());
     if (symbol == null) {
       System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
@@ -845,6 +880,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(NOTNode notNode) {
+    notNode.setCurrentScope(this.currentScope);
     Symbol expressionType = notNode.getExpr().accept(this);
     if (!this.builtInBool.equals(expressionType)) {
       System.err.println("Cannot negate variable of type " + expressionType.getName());
@@ -855,21 +891,25 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(BOOLNode boolNode) {
+    boolNode.setCurrentScope(this.currentScope);
     return this.builtInBool;
   }
 
   @Override
   public Symbol visit(CHARNode charNode) {
+    charNode.setCurrentScope(this.currentScope);
     return this.builtInChar;
   }
 
   @Override
   public Symbol visit(INTNode intNode) {
+    intNode.setCurrentScope(this.currentScope);
     return this.builtInInt;
   }
 
   @Override
   public Symbol visit(IDNode idNode) {
+    idNode.setCurrentScope(this.currentScope);
     Symbol var = currentScope.resolve(idNode.getId());
     if (var == null) {
       System.err.println("Couldn't find variable " + idNode.getId());
@@ -880,6 +920,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
 
   @Override
   public Symbol visit(ConstructorNode constructorNode) {
+    constructorNode.setCurrentScope(this.currentScope);
     if (this.currentScope instanceof STClass stClass) {
       if (!stClass.getName().equals(constructorNode.getIdNode().getId())) {
         System.err.println(

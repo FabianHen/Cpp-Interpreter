@@ -1,7 +1,14 @@
 class A{
+    A() {}
+    int c();
     virtual int b(){
-
+        int a = 3;
+        A a();
     }
+
+    int a;
+    int a = d;
+    int d;
 };
 
 class B : A{
