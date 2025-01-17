@@ -14,7 +14,7 @@ public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mi
     B() { value = 0; }
     B(int x) { value = x; }
     B(B& rhs) { value = rhs.value; }
-    B& operator=(const B& rhs) {
+    B& operator=( B& rhs) {
         (*this).value = rhs.value;    // "this" sollte erkannt werden
         return *this;               // dito braucht man ein "*this" ...
     }

@@ -1,14 +1,9 @@
 class A{
-    A() {}
-    int c();
-    virtual int b(){
-        int a = 3;
-        A a();
+    int value;
+    A& operator=( A& rhs) {
+        (*this).value = rhs.value;    // "this" sollte erkannt werden
+        return *this;               // dito braucht man ein "*this" ...
     }
-
-    int a;
-    int a = d;
-    int d;
 };
 
 class B : A{

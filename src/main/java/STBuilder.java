@@ -468,8 +468,6 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(FndefNode fndefNode) {
     fndefNode.setCurrentScope(this.currentScope);
-    // TODO: Fn declaration and definition dont declare and define (they don't like each other)
-    // TODO: Kick FNdec out of class (why would you do that Bjarne)
     Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), true);
     if (function != null) {
       function.setHasBeenDefined(true);
@@ -707,7 +705,36 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(OperatorNode operatorNode) {
     operatorNode.setCurrentScope(this.currentScope);
-    // TODO
+    STClass stClass = (STClass) this.currentScope;
+    if(!stClass.getName().equals(operatorNode.getReturnType().getId())){
+      System.err.println("Operator function has to return Object of class!");
+      return null;
+    }
+    if(!stClass.getName().equals(operatorNode.getParamType().getId())){
+      System.err.println("Operator function parameter type has to be Object of class!");
+      return null;
+    }
+    List<ParamNode> paramList = new ArrayList<>();
+    ParamNode paramNode = new ParamNode(new TypeNode(stClass.getName()),new IdentifierNode(operatorNode.getParamName(), true));
+    paramList.add(paramNode);
+    Function function = new Function("operator=", stClass, this.currentScope, paramList,false);
+    this.currentScope.bind(function);
+    this.currentScope = function;
+    Symbol paramType = paramNode.accept(this);
+    if (paramType != null) {
+      if (paramNode.getIdentifier().isArray()) {
+        paramType = new Array(paramNode.getIdentifier().getDimension(), (STType) paramType);
+      }
+      function.bind(
+              new Variable(paramNode.getIdentifier().getIdNode().getId(), (STType) paramType));
+    } else {
+      // Error will be handled in TypeNode
+      return null;
+    }
+    for (var child: operatorNode.getChildren()){
+      child.accept(this);
+    }
+    this.currentScope = currentScope.getParent();
     return null;
   }
 
