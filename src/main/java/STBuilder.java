@@ -188,6 +188,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       return null;
     }
     // Check if id can be declared
+
     String id = vardeclNode.getIdentifier().getIdNode().getId();
     if (!isAllowedVarID(id)) {
       return null;
@@ -1363,7 +1364,6 @@ public class STBuilder implements ASTVisitor<Symbol> {
    * @param paramNodes the params to be bound
    */
   private void defineParams(Function function, List<ParamNode> paramNodes) {
-    this.currentScope = function;
     for (var child : paramNodes) {
       Symbol paramType = child.accept(this);
       if (paramType != null) {

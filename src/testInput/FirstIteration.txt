@@ -1,15 +1,17 @@
-class A{
-    int value;
-    A (){
-        A a();
-        return a;
+int main(){
+	int arr[5] = {10, 20, 30, 40, 50};
+	arr[2] = 99;
+
+    int i=0;
+    while(i<5){
+        i++;
+        print_int(arr[i]);
     }
-};
 
-class B : A{
-    int b() override;
+	int matrix[2][2] = {{1, 2}, {3, 4}};
+	print_int(matrix[1][1]);
+	matrix[0][1] = 10;
+	print_int(matrix[0][1]);
 
-    int b() {
-
-    }
-};
+    return 0;
+}
