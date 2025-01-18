@@ -257,6 +257,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
               new Variable(
                   constructorCallNode.getInstancename().getId(), constructorFunction.getType());
           currentScope.bind(var);
+          //Save which constructor was called
+          constructorCallNode.setFunction(constructorFunction);
           return constructorFunction.getType();
         }
       }
@@ -275,7 +277,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(FndeclNode fndeclNode) {
     fndeclNode.setCurrentScope(this.currentScope);
-    Function newFunction = checkFunctionCanBeDefined(fndeclNode, false);
+    Function newFunction = checkFunctionCanBeDefined(fndeclNode, null);
     if (newFunction != null) {
       currentScope.bind(newFunction);
     }
@@ -343,8 +345,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
   @Override
   public Symbol visit(FndefNode fndefNode) {
     fndefNode.setCurrentScope(this.currentScope);
-    Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), true);
+    Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), fndefNode);
     if (function != null) {
+      function.getFndeclNode().setFndefNode(fndefNode);
       function.setHasBeenDefined(true);
       this.currentScope.bind(function);
       this.currentScope = function;
@@ -628,10 +631,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
       // Check if param sizes match
       int size =
           (fncallNode.getArgsNode() != null ? fncallNode.getArgsNode().getArguments().size() : 0);
+      List<ExprNode> arguments = fncallNode.getArgsNode() != null ? fncallNode.getArgsNode().getArguments() : new ArrayList<>();
       if (size == function.getParams().size()) {
         // Check if param and argument types match
         if (compareListsOfTypes(
-            function.getParams(), fncallNode.getArgsNode().getArguments(), true)) {
+            function.getParams(), arguments, true)) {
+          // Save where the found function was declared
+          fncallNode.setFndeclNode(function.getFndeclNode());
           return function.getType();
         }
       }
@@ -1055,6 +1061,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
             constructorNode.getParams(),
             false);
     newConstructor.setHasBeenDefined(true);
+    newConstructor.setConstructorNode(constructorNode);
     currentScope.bind(newConstructor);
     // Adding the params to the new constructor
     defineParams(newConstructor, constructorNode.getParams());
@@ -1235,10 +1242,10 @@ public class STBuilder implements ASTVisitor<Symbol> {
    * for virtual when overriding
    *
    * @param fndeclNode a node that represents the 'fndecl' parser rule
-   * @param isDefinition indicates if the declaration is part of a definition
+   * @param fndefNode is not null if the declaration is part of a definition
    * @return the new function or {@code null} if an error occurred
    */
-  private Function checkFunctionCanBeDefined(FndeclNode fndeclNode, boolean isDefinition) {
+  private Function checkFunctionCanBeDefined(FndeclNode fndeclNode, FndefNode fndefNode) {
     // Checking valid return type
     Symbol type = fndeclNode.getReturntype().accept(this);
     if (type == null) {
@@ -1265,11 +1272,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
         if (compareListsOfTypes(fndeclNode.getParams(), foundFunction.getParams(), false)) {
           if (this.currentScope.equals(foundFunction.getScope())) {
             // Found function is in the same class
-            if (!isDefinition || foundFunction.hasBeenDefined()) {
+            if (fndefNode == null || foundFunction.hasBeenDefined()) {
               System.err.println(
                   "Cannot override function '" + foundFunction.getName() + "' in same class!");
               return null;
             }
+            // Declared function is defined in given fndefNode
+            foundFunction.getFndeclNode().setFndefNode(fndefNode);
             return foundFunction;
           } else if (!foundFunction.isVirtual()) {
             // found function is in parent class but not virtual
@@ -1299,6 +1308,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
             (didOverride || fndeclNode.isVirtual()));
     // define all params in function scope
     defineParams(newFunction, fndeclNode.getParams());
+    newFunction.setFndeclNode(fndeclNode);
     return newFunction;
   }
 

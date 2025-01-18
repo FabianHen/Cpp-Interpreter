@@ -4,11 +4,14 @@ import AST.*;
 import java.util.List;
 
 public class Function extends Scope implements Symbol {
-  private String name;
-  private STType type;
-  private List<ParamNode> params;
-  private boolean isVirtual;
+  private final String name;
+  private final STType type;
+  private final List<ParamNode> params;
+  private final boolean isVirtual;
   private boolean hasBeenDefined;
+
+  private FndeclNode fndeclNode;
+  private ConstructorNode constructorNode;
 
   public Function(
       String name, STType type, Scope definingScope, List<ParamNode> params, boolean isVirtual) {
@@ -18,6 +21,8 @@ public class Function extends Scope implements Symbol {
     this.params = params;
     this.isVirtual = isVirtual;
     this.hasBeenDefined = false;
+    fndeclNode = null;
+    constructorNode = null;
   }
 
   @Override
@@ -53,6 +58,21 @@ public class Function extends Scope implements Symbol {
 
   public void setHasBeenDefined(boolean hasBeenDefined) {
     this.hasBeenDefined = hasBeenDefined;
+  }
+
+  public void setFndeclNode(FndeclNode fndefNode) {
+    this.fndeclNode = fndefNode;
+  }
+  public FndeclNode getFndeclNode() {
+    return this.fndeclNode;
+  }
+
+  public ConstructorNode getConstructorNode() {
+    return constructorNode;
+  }
+
+  public void setConstructorNode(ConstructorNode constructorNode) {
+    this.constructorNode = constructorNode;
   }
 
   @Override

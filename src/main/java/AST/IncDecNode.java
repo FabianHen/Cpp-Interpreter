@@ -1,6 +1,6 @@
 package AST;
 
-public class IncDecNode extends ASTNode {
+public class IncDecNode extends ExprNode {
   // Fields
   private IDNode idNode;
   private boolean isInc;

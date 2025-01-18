@@ -8,6 +8,7 @@ public class FncallNode extends ExprNode {
   private IDNode idNode;
   private ArgsNode argsNode;
   private boolean hasThis;
+  private FndeclNode fndeclNode;
 
   // Constructor
   public FncallNode(List<ObjcallNode> objcalls, IDNode idNode, ArgsNode argsNode, boolean hasThis) {
@@ -16,7 +17,7 @@ public class FncallNode extends ExprNode {
     this.idNode = idNode;
     this.argsNode = argsNode;
     this.hasThis = hasThis;
-
+    fndeclNode = null;
     for (ObjcallNode child : objcalls) {
       addChild(child);
     }
@@ -53,6 +54,14 @@ public class FncallNode extends ExprNode {
 
   public boolean hasThis() {
     return this.hasThis;
+  }
+
+  public FndeclNode getFndeclNode() {
+    return fndeclNode;
+  }
+
+  public void setFndeclNode(FndeclNode fndeclNode) {
+    this.fndeclNode = fndeclNode;
   }
 
   @Override

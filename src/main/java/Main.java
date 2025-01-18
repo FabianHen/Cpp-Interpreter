@@ -1,6 +1,8 @@
 import AST.ASTNode;
 import java.io.IOException;
 import java.util.List;
+
+import Interpreter.Interpreter;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -37,5 +39,7 @@ public class Main {
     printTree(node, "", true);
     STBuilder stBuilder = new STBuilder();
     node.accept(stBuilder);
+    Interpreter interpreter = new Interpreter();
+    node.accept(interpreter);
   }
 }

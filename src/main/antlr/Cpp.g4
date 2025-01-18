@@ -95,7 +95,7 @@ vardecl
     ;
 
 constructorCall
-    :   cName = ID objName = ID '(' args? ')'
+    :   cName = ID objName = ID '(' args ')'
     ;
 
 fndecl
