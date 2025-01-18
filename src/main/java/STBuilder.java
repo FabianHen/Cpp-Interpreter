@@ -3,42 +3,64 @@ import SymbolTable.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The STBuilder is a class that receives a root node of an AST and uses this tree to create a Tree
+ * structured Symbol table. At the same time it checks that types were used correctly in the code.
+ */
 public class STBuilder implements ASTVisitor<Symbol> {
   private Scope currentScope;
+  // Builtin types are defined globally for easier typechecking
   private final BuiltIn builtInVoid = new BuiltIn("void");
   private final BuiltIn builtInInt = new BuiltIn("int");
   private final BuiltIn builtInChar = new BuiltIn("char");
   private final BuiltIn builtInBool = new BuiltIn("bool");
 
+  /**
+   * This function binds built in types and functions and visits all children of the given
+   * programNode
+   *
+   * @param programNode a node that represents the 'program' parser rule
+   * @return {@code null}
+   */
   @Override
   public Symbol visit(ProgramNode programNode) {
     this.currentScope = new Scope(null);
     programNode.setCurrentScope(this.currentScope);
+    // built in types are bound to validate types of variables and functions
     this.currentScope.bind(this.builtInInt);
     this.currentScope.bind(this.builtInChar);
     this.currentScope.bind(this.builtInBool);
     this.currentScope.bind(this.builtInVoid);
+    // builtin print functions ar bound to prevent redefinition of those
     this.currentScope.bind(
         new Function("print_int", this.builtInVoid, null, new ArrayList<>(), false));
     this.currentScope.bind(
         new Function("print_char", this.builtInVoid, null, new ArrayList<>(), false));
     this.currentScope.bind(
         new Function("print_bool", this.builtInVoid, null, new ArrayList<>(), false));
-
+    // all children are visited
     for (var child : programNode.getChildren()) {
       child.accept(this);
     }
     return null;
   }
 
+  /**
+   * A Function that receives a classDef node and defines it and its children in the current scope
+   *
+   * @param classDefNode a node that represents the 'classDef' parser rule
+   * @return a STClass object or {@code null} in case of an error
+   */
   @Override
   public Symbol visit(ClassDefNode classDefNode) {
     classDefNode.setCurrentScope(this.currentScope);
+    // Check if the name has already been declared in any way
     Symbol symbol = currentScope.resolve(classDefNode.getIdNode().getId());
     if (symbol != null) {
       System.err.println(classDefNode.getIdNode().getId() + " has already been declared!");
       return null;
     }
+    // Check if inheritScope is given and if it is valid
     Scope inheritScope = null;
     if (classDefNode.getParentclass() != null) {
       Symbol parentSymbol = currentScope.resolve(classDefNode.getParentclass().getId());
@@ -50,10 +72,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
         return null;
       }
     }
+    // Create a new Class and bind it in current scope
     STClass stClass =
         new STClass(this.currentScope, classDefNode.getIdNode().getId(), inheritScope);
     this.currentScope.bind(stClass);
-    // Add classmembers to class
+    // Add class members to class scope
     this.currentScope = stClass;
     for (var child : classDefNode.getClassmembers()) {
       child.accept(this);
@@ -63,69 +86,19 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return stClass;
   }
 
-  private boolean validateObjectCalls(List<ObjcallNode> objectCalls, boolean hasThis) {
-    Scope currentObjScope = this.currentScope;
-    if (hasThis) {
-      Symbol foundClass = findMyClass(currentObjScope);
-      if (foundClass == null) {
-        System.err.println("Cannot use 'this' outside of class");
-        return false;
-      }
-      currentObjScope = (Scope) foundClass;
-    }
-    for (var child : objectCalls) {
-      Symbol obj = child.accept(this);
-      if (obj == null) {
-        System.err.println(child.getIdNode().getId() + " could not be found!");
-        this.currentScope = currentObjScope;
-        return false;
-      }
-      if (obj.getType() instanceof STClass type) {
-        this.currentScope = type;
-      } else {
-        System.err.println(
-            "Variable " + obj.getName() + " is from BuiltIn type and can't have any members!");
-        this.currentScope = currentObjScope;
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private Symbol compareTypes(STType type1, STType type2, boolean usePoly) {
-    STType returnType = type1;
-    if (type1 instanceof Array varArray) {
-      if (type2 instanceof Array exprArray) {
-        if (varArray.getDimension() != exprArray.getDimension()) {
-          return null;
-        }
-        type1 = varArray.getType();
-        type2 = exprArray.getType();
-      } else {
-        return null;
-      }
-    }
-    // Check for polymorphie
-    if (usePoly && type1 instanceof STClass stClass1 && type2 instanceof STClass stClass2) {
-      while (stClass2 != null) {
-        if (stClass1.equals(stClass2)) {
-          return returnType;
-        }
-        stClass2 = (STClass) stClass2.getInheritedScope();
-      }
-      return null;
-    } else if (!type1.equals(type2)) {
-      return null;
-    }
-    return returnType;
-  }
-
+  /**
+   * Checks if both sides of the binding are of same type and defined
+   *
+   * @param bindingNode a node that represents the 'binding' parser rule
+   * @return the type of the variable bound or {@code null} if an error occured
+   */
   @Override
   public Symbol visit(BindingNode bindingNode) {
     bindingNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(bindingNode.getObjcalls(), bindingNode.hasThis())) return null;
     STType varType = null;
+    // validate array access if given
     if (bindingNode.hasArracc()) {
       Symbol arraccReturn = bindingNode.getArraccNode().accept(this);
       this.currentScope = currentObjScope;
@@ -135,6 +108,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
       varType = (STType) arraccReturn;
     } else {
+      // Check if id on left side is defined
       String id = bindingNode.getIdNode().getId();
       Symbol symbol = this.currentScope.resolve(id);
       this.currentScope = currentObjScope;
@@ -148,6 +122,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
       varType = var.getType();
     }
+    // Make sure that assign operators like '+=' and '-=' are not used with non int
     if (!bindingNode.getAssignop().equals("=")) {
       // Check symbol type (int)
       if (!varType.equals(this.builtInInt)) {
@@ -170,6 +145,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return type;
   }
 
+  /**
+   * Checks if the object in the given objectcallNode can be called
+   *
+   * @param objcallNode a node that represents the 'objcall' parser rule
+   * @return the type of the object called or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ObjcallNode objcallNode) {
     objcallNode.setCurrentScope(this.currentScope);
@@ -192,42 +173,37 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return objcallNode.getFncallNode().accept(this);
   }
 
-  private boolean isAllowedVarID(String id) {
-    Symbol symbolInScope = currentScope.resolveMember(id);
-    if (symbolInScope != null) {
-      System.err.println("Variable " + id + " has already been declared in this scope!");
-      return false;
-    }
-    Symbol symbolInAllScopes = currentScope.resolve(id);
-    // If the found symbol is a scope it has to be a class or function not a variable
-    if (symbolInAllScopes instanceof Scope) {
-      System.err.println(
-          "Cannot use name of existing class or function '" + id + "' as variable name!");
-      return false;
-    }
-    return true;
-  }
-
+  /**
+   * Checks if Types in variable declaration match and creates a new variable if possible
+   *
+   * @param vardeclNode a node that represents the 'vardecl' parser rule
+   * @return new {@code Variable} or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(VardeclNode vardeclNode) {
+    // Check if Reference
     vardeclNode.setCurrentScope(this.currentScope);
     if (vardeclNode.getIdentifier().isReference() && !(vardeclNode.getExpr() instanceof IDNode)) {
       System.err.println("Reference has to be defined with Variable!");
       return null;
     }
+    // Check if id can be declared
     String id = vardeclNode.getIdentifier().getIdNode().getId();
     if (!isAllowedVarID(id)) {
       return null;
     }
+    // Check if type is valid
     Symbol symbol = vardeclNode.getType().accept(this);
     if (!(symbol instanceof STType type)) {
       // Error will be handled in TypeNode
       return null;
     }
+    // Check if type is array
     if (vardeclNode.isArray()) {
-      // Override type to array type
+      // Override type to array of this type
       type = new Array(vardeclNode.getIdentifier().getDimension(), type);
     }
+    // Check if expression is same type as declaration type
     if (vardeclNode.getExpr() != null) {
       Symbol exprType = vardeclNode.getExpr().accept(this);
       if (exprType == null) {
@@ -241,68 +217,32 @@ public class STBuilder implements ASTVisitor<Symbol> {
         return null;
       }
     }
+    // Create and bind new variable
     Variable var = new Variable(id, type);
     currentScope.bind(var);
     return var;
   }
 
-  private List<Symbol> getAllConstructors(Symbol symbol) {
-    if (symbol instanceof Function function) {
-      if (function.getScope() instanceof STClass stClass) {
-        if (stClass.getName().equals(function.getName())) {
-          return stClass.resolveAllMember(stClass.getName());
-        } else {
-          System.err.println("'" + function.getName() + "' is not a constructor!");
-          return new ArrayList<>();
-        }
-      } else {
-        System.err.println("'" + function.getName() + "' is not a class!");
-        return new ArrayList<>();
-      }
-    }
-    if (symbol instanceof STClass stClass) {
-      return stClass.resolveAllMember(stClass.getName());
-    } else {
-      System.err.println("Cannot call variable '" + symbol.getName() + "' as constructor!");
-      return new ArrayList<>();
-    }
-  }
-
-  private boolean compareListsOfTypes(
-      List<? extends ASTNode> list1, List<? extends ASTNode> list2, boolean usePoly) {
-    for (int i = 0; i < list1.size(); i++) {
-      ASTNode node1 = list2.get(i);
-      ASTNode node2 = list1.get(i);
-      Symbol type1 = node1.accept(this);
-      Symbol type2 = node2.accept(this);
-      if (type1 == null || type2 == null) {
-        // Error will be handled in visit expr
-        return false;
-      }
-      if (compareTypes((STType) type1, (STType) type2, usePoly) == null) {
-        return false;
-      }
-    }
-    return true;
-  }
-
+  /**
+   * Checks if the variable can be created and a fitting constructor can be found. Creates a
+   * variable if both apply.
+   *
+   * @param constructorCallNode a node that represents the 'constructorCall' parser rule
+   * @return the type of the new Variable or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ConstructorCallNode constructorCallNode) {
     constructorCallNode.setCurrentScope(this.currentScope);
+    // Check if the variable can be defined
     String id = constructorCallNode.getInstancename().getId();
     if (!isAllowedVarID(id)) {
       return null;
     }
-
-    Symbol symbol = currentScope.resolve(constructorCallNode.getTypename().getId());
-    if (symbol == null) {
-      System.err.println(
-          "Could not find class '" + constructorCallNode.getTypename().getId() + "'!");
-      return null;
-    }
-    List<Symbol> constructors = getAllConstructors(symbol);
+    // Iterates through all constructors of the class
+    List<Symbol> constructors = getAllConstructors(constructorCallNode.getTypename().getId());
     for (var constructor : constructors) {
       Function constructorFunction = (Function) constructor;
+      // saves arguments and amount of args
       int size = 0;
       List<ExprNode> argsList = new ArrayList<>();
       if (constructorCallNode.getArgsNode() != null) {
@@ -311,6 +251,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
       if (size == constructorFunction.getParams().size()) {
         if (compareListsOfTypes(constructorFunction.getParams(), argsList, true)) {
+          // a matching constructor was found and a new variable is created
           Variable var =
               new Variable(
                   constructorCallNode.getInstancename().getId(), constructorFunction.getType());
@@ -323,77 +264,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
-  private Function checkFunctionCanBeDefined(FndeclNode fndeclNode, boolean isDefinition) {
-    // Checking valid return type
-    Symbol type = fndeclNode.getReturntype().accept(this);
-    if (type == null) {
-      // Error will be handled in TypeNode
-      return null;
-    }
-    // Check valid function name
-    Symbol symbol = this.currentScope.resolve(fndeclNode.getIdNode().getId());
-    if (symbol instanceof STClass stClass) {
-      System.err.println(
-              "Function '" + stClass.getName() + "' cannot have the same name as a class");
-    }
-    // Check if function can be declared with this params
-    List<Symbol> memberSymbols = this.currentScope.resolveAll(fndeclNode.getIdNode().getId());
-    boolean didOverride = false;
-    for (var member : memberSymbols) {
-      if (!(member instanceof Function foundFunction)) {
-        System.err.println(
-                fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!");
-        return null;
-      }
-      if (fndeclNode.getParams().size() == foundFunction.getParams().size()) {
-        if (compareListsOfTypes(fndeclNode.getParams(), foundFunction.getParams(), false)) {
-          if (this.currentScope.equals(foundFunction.getScope())) {
-            if (!isDefinition || foundFunction.hasBeenDefined()) {
-              System.err.println(
-                      "Cannot override function '" + foundFunction.getName() + "' in same class!");
-              return null;
-            }
-            return foundFunction;
-          }
-          else if (!foundFunction.isVirtual()) {
-            System.err.println(
-                    "Cannot override non virtual function '" + foundFunction.getName() + "'!");
-            return null;
-          } else {
-            didOverride = true;
-          }
-        }
-      }
-    }
-    // Check if this function needs to override but doesn't
-    if (!didOverride && fndeclNode.isOverride()) {
-      System.err.println(
-              "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!");
-      return null;
-    }
-    Function newFunction =
-            new Function(
-                    fndeclNode.getIdNode().getId(),
-                    (STType) type,
-                    this.currentScope,
-                    fndeclNode.getParams(),
-                    (didOverride || fndeclNode.isVirtual()));
-    for (var child : fndeclNode.getParams()) {
-      Symbol paramType = child.accept(this);
-      if (paramType != null) {
-        if (child.getIdentifier().isArray()) {
-          paramType = new Array(child.getIdentifier().getDimension(), (STType) paramType);
-        }
-        newFunction.bind(
-                new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
-      } else {
-        // Error will be handled in TypeNode
-        return null;
-      }
-    }
-    return newFunction;
-  }
-
+  /**
+   * This function trys to declare a new function. It realizes overriding, overloading and checks
+   * for virtual when overriding
+   *
+   * @param fndeclNode a node that represents the 'fndeclNode' parser rule
+   * @return a new function or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(FndeclNode fndeclNode) {
     fndeclNode.setCurrentScope(this.currentScope);
@@ -404,6 +281,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return newFunction;
   }
 
+  /**
+   * This function checks if the returned expression is valid and if it matches the function return
+   * type
+   *
+   * @param returnNode a node that represents the 'return' parser rule
+   * @return the returned type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ReturnNode returnNode) {
     returnNode.setCurrentScope(this.currentScope);
@@ -413,6 +297,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       return null;
     }
     Symbol returnType;
+    // if an expression is returned
     if (returnNode.getExpr() != null) {
       returnType = returnNode.getExpr().accept(this);
       // Error will be handled in visit expr
@@ -423,8 +308,10 @@ public class STBuilder implements ASTVisitor<Symbol> {
         return null;
       }
     } else if (!returnNode.hasThis()) {
+      // nothing is returned, therefore void
       returnType = this.builtInVoid;
     } else {
+      // 'this' is returned
       Symbol symbol = findMyClass(currentScope);
       if (symbol != null) {
         returnType = symbol;
@@ -445,26 +332,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
-  private Symbol findMyClass(Scope scope) {
-    while (scope != null) {
-      if (scope instanceof STClass stClass) {
-        return stClass;
-      }
-      scope = scope.getParent();
-    }
-    return null;
-  }
-
-  private Function findMyFunction(Scope scope) {
-    while (scope.getParent() != null) {
-      if (scope instanceof Function function) {
-        return function;
-      }
-      scope = scope.getParent();
-    }
-    return null;
-  }
-
+  /**
+   * Trys to declare and define a function based on the given {@code FndefNode} and accepts the
+   * definition block
+   *
+   * @param fndefNode a node that represents the 'fndef' parser rule
+   * @return a new function or {@code null} if an error has occurred
+   */
   @Override
   public Symbol visit(FndefNode fndefNode) {
     fndefNode.setCurrentScope(this.currentScope);
@@ -481,6 +355,10 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
+  /**
+   * @param printNode node that represents the 'print' parser rule
+   * @return the printed type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(PrintNode printNode) {
     printNode.setCurrentScope(this.currentScope);
@@ -495,6 +373,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       }
       return builtIn;
     }
+    // error will be handled in expression if 'expressionType' is null
     if (expressionType != null) {
       System.err.println(
           "Print function expected "
@@ -506,36 +385,66 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
+  /**
+   * Checks if condition is of boolean type and accepts the block if this is the case
+   *
+   * @param whileNode node that represents the 'while' parser rule
+   * @return boolean builtin type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(WhileNode whileNode) {
     whileNode.setCurrentScope(this.currentScope);
     Symbol conditionType = whileNode.getCondition().accept(this);
+    // Check if condition is valid and handle block
     boolean result = handleConditionBlock(conditionType, whileNode.getBlock());
     return (result ? conditionType : null);
   }
 
+  /**
+   * Checks if condition is of boolean type and accepts the ifs block and the else-if blocks and
+   * else block if existing.
+   *
+   * @param ifNode node that represents the 'if' parser rule
+   * @return boolean builtin type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(IfNode ifNode) {
     ifNode.setCurrentScope(this.currentScope);
     Symbol conditionType = ifNode.getCondition().accept(this);
+    // check if condition is a condition
     boolean result = handleConditionBlock(conditionType, ifNode.getBlock());
+    // accept all else-ifs
     for (var elif : ifNode.getElseifblocks()) {
       elif.accept(this);
     }
+    // accept all elses
     if (ifNode.getElseblock() != null) {
       ifNode.getElseblock().accept(this);
     }
     return (result ? conditionType : null);
   }
 
+  /**
+   * Checks if condition is of boolean type and accepts the block if this is the case
+   *
+   * @param elseifNode node that represents the 'elseif' parser rule
+   * @return boolean builtin type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ElseifNode elseifNode) {
     elseifNode.setCurrentScope(this.currentScope);
     Symbol conditionType = elseifNode.getCondition().accept(this);
+    // Check if condition is valid and handle block
     boolean result = handleConditionBlock(conditionType, elseifNode.getBlock());
     return (result ? conditionType : null);
   }
 
+  /**
+   * Accepts the block of given {@code elseNode}
+   *
+   * @param elseNode node that represents the 'elseif' parser rule
+   * @return {@code null}
+   */
   @Override
   public Symbol visit(ElseNode elseNode) {
     elseNode.setCurrentScope(this.currentScope);
@@ -545,34 +454,36 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
-  private boolean handleConditionBlock(Symbol conditionType, BlockNode block) {
-    if (!this.builtInBool.equals(conditionType)) {
-      System.err.println(
-          "Type of variable '"
-              + (conditionType == null ? "null" : conditionType.getName())
-              + "' is not a valid condition type!");
-      return false;
-    }
-    this.currentScope = new Scope(currentScope);
-    block.accept(this);
-    this.currentScope = this.currentScope.getParent();
-    return true;
-  }
-
+  /**
+   * This function does nothing. The reason for that is, that te identifier node is never visited in
+   * our STBuilder. It is only accessed.
+   *
+   * @param identifierNode node that represents the 'identifier' parser rule
+   * @return {@code null}
+   */
   @Override
   public Symbol visit(IdentifierNode identifierNode) {
     // Unnecessary Function, because IdentifierNode won't be visited but only used
     return null;
   }
 
+  /**
+   * This functions checks if the increment and decrement operators are used with an int variable as
+   * intended.
+   *
+   * @param incDecNode node that represents the 'incDec' parser rule
+   * @return {@code builtInInt} or null if an error occurred
+   */
   @Override
   public Symbol visit(IncDecNode incDecNode) {
     incDecNode.setCurrentScope(this.currentScope);
     Symbol symbol = currentScope.resolve(incDecNode.getIdNode().getId());
+    // Check if accessed variable is declared
     if (symbol == null) {
       System.err.println("Could not find Variable " + incDecNode.getIdNode().getId() + "!");
       return null;
     }
+    // Check if this variable is an integer
     if (!this.builtInInt.equals(symbol.getType())) {
       System.err.println(
           "Could not"
@@ -585,6 +496,15 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return this.builtInInt;
   }
 
+  /**
+   * This function handles {@code ArgsNodes}. It checks if all arguments are of the same type and
+   * dimension Because argsNode is only used in {@code fncall()} and arrays and the {@code ArgsNode}
+   * is not visited in {@code fncall()}, the focus of this function is on dealing with arrays and
+   * not function call parameters.
+   *
+   * @param argsNode node that represents the 'args' parser rule
+   * @return an array type with fitting dimension or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ArgsNode argsNode) {
     argsNode.setCurrentScope(this.currentScope);
@@ -596,6 +516,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
           // Error will be handled in Expr
           return null;
         }
+        // Check if all arguments are of same type (type meaning base type or array type and
+        // dimension)
         if (type == null) {
           type = symbol;
         } else {
@@ -611,14 +533,23 @@ public class STBuilder implements ASTVisitor<Symbol> {
         }
       }
       int dim = 1;
+      // if we have an array containing arrays with dimension x we have to return a new array type
+      // with dimension x + 1
       if (type instanceof Array array) {
         dim += array.getDimension();
       }
       return type != null ? new Array(dim, type.getType()) : null;
     }
+    // return if given arguments are not an array
     return null;
   }
 
+  /**
+   * This function validates the param type
+   *
+   * @param paramNode node that represents the 'param' parser rule
+   * @return the type of the param or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ParamNode paramNode) {
     paramNode.setCurrentScope(this.currentScope);
@@ -628,11 +559,18 @@ public class STBuilder implements ASTVisitor<Symbol> {
       return null;
     }
     if (paramNode.getIdentifier().isArray()) {
+      // Create new Array type with dimension if param is declared as array
       return new Array(paramNode.getIdentifier().getDimension(), (STType) type);
     }
     return type;
   }
 
+  /**
+   * This function accepts all children of the given block node
+   *
+   * @param blockNode node that represents the 'block' parser rule
+   * @return type void
+   */
   @Override
   public Symbol visit(BlockNode blockNode) {
     blockNode.setCurrentScope(this.currentScope);
@@ -642,6 +580,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return this.builtInVoid;
   }
 
+  /**
+   * This function validates the type of the given {@code TypeNode}.
+   *
+   * @param typeNode node that represents the 'type' parser rule
+   * @return the type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(TypeNode typeNode) {
     typeNode.setCurrentScope(this.currentScope);
@@ -657,22 +601,34 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
+  /**
+   * This function checks if there is a function with params that match the given arguments.
+   *
+   * @param fncallNode node that represents the 'fncall' parser rule
+   * @return the return type of this function or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(FncallNode fncallNode) {
     fncallNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
+    // Changes the current scope to the scope where this function is supposed to be defined
     if (!validateObjectCalls(fncallNode.getObjcalls(), fncallNode.hasThis())) return null;
+    // Find all symbols  with the called function name and search for a function with fitting params
     List<Symbol> symbols = this.currentScope.resolveAll(fncallNode.getIdNode().getId());
     this.currentScope = currentObjScope;
     for (var member : symbols) {
+      // If a non function is found there can't be a function with this name due to checks in
+      // function declaration
       if (!(member instanceof Function function)) {
         System.err.println(
             "Function " + fncallNode.getIdNode().getId() + " could not be resolved!");
         return null;
       }
+      // Check if param sizes match
       int size =
           (fncallNode.getArgsNode() != null ? fncallNode.getArgsNode().getArguments().size() : 0);
       if (size == function.getParams().size()) {
+        // Check if param and argument types match
         if (compareListsOfTypes(
             function.getParams(), fncallNode.getArgsNode().getArguments(), true)) {
           return function.getType();
@@ -683,11 +639,18 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return null;
   }
 
+  /**
+   * This function validates a called object member and returns its type.
+   *
+   * @param objmemNode node that represents the 'objmem' parser rule
+   * @return the type of the found object or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(OBJMEMNode objmemNode) {
     objmemNode.setCurrentScope(this.currentScope);
     Scope currentObjScope = this.currentScope;
     if (!validateObjectCalls(objmemNode.getObjcalls(), objmemNode.hasThis())) return null;
+    // Get Type if an array is accessed
     if (objmemNode.hasArraccNode()) {
       Symbol type = objmemNode.getArraccNode().accept(this);
       this.currentScope = currentObjScope;
@@ -695,6 +658,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     }
     Symbol symbol = this.currentScope.resolve(objmemNode.getIdNode().getId());
     this.currentScope = currentObjScope;
+    // Throw error if found symbol is not an object
     if (!(symbol instanceof Variable variable)) {
       System.err.println("Variable " + symbol.getName() + " could not be resolved!");
       return null;
@@ -702,42 +666,53 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return variable.getType();
   }
 
+  /**
+   * This function handles and validates the 'operator=' function of classes.
+   *
+   * @param operatorNode node that represents the 'operator' parser rule
+   * @return
+   */
   @Override
   public Symbol visit(OperatorNode operatorNode) {
     operatorNode.setCurrentScope(this.currentScope);
+    // operator can only be defined in class (grammar) therefor typecast without 'instanceof' or
+    // 'try...catch'
     STClass stClass = (STClass) this.currentScope;
-    if(!stClass.getName().equals(operatorNode.getReturnType().getId())){
+    // Check if operator returns the class that it's defined in
+    if (!stClass.getName().equals(operatorNode.getReturnType().getId())) {
       System.err.println("Operator function has to return Object of class!");
       return null;
     }
-    if(!stClass.getName().equals(operatorNode.getParamType().getId())){
+    // Check if param type is not the same as the class that operator is defined in
+    if (!stClass.getName().equals(operatorNode.getParamType().getId())) {
       System.err.println("Operator function parameter type has to be Object of class!");
       return null;
     }
+    // Create new function for 'operator='
     List<ParamNode> paramList = new ArrayList<>();
-    ParamNode paramNode = new ParamNode(new TypeNode(stClass.getName()),new IdentifierNode(operatorNode.getParamName(), true));
+    ParamNode paramNode =
+        new ParamNode(
+            new TypeNode(stClass.getName()), new IdentifierNode(operatorNode.getParamName(), true));
     paramList.add(paramNode);
-    Function function = new Function("operator=", stClass, this.currentScope, paramList,false);
-    this.currentScope.bind(function);
-    this.currentScope = function;
-    Symbol paramType = paramNode.accept(this);
-    if (paramType != null) {
-      if (paramNode.getIdentifier().isArray()) {
-        paramType = new Array(paramNode.getIdentifier().getDimension(), (STType) paramType);
-      }
-      function.bind(
-              new Variable(paramNode.getIdentifier().getIdNode().getId(), (STType) paramType));
-    } else {
-      // Error will be handled in TypeNode
-      return null;
-    }
-    for (var child: operatorNode.getChildren()){
+    Function operator = new Function("operator=", stClass, this.currentScope, paramList, false);
+    this.currentScope.bind(operator);
+    // Add parameter to function scope
+    defineParams(operator, paramList);
+    // handle function block
+    this.currentScope = operator;
+    for (var child : operatorNode.getChildren()) {
       child.accept(this);
     }
     this.currentScope = currentScope.getParent();
     return null;
   }
 
+  /**
+   * Checks if multiplication is called with two integers
+   *
+   * @param mulNode node that represents the 'MUL' parser rule
+   * @return type int or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(MULNode mulNode) {
     mulNode.setCurrentScope(this.currentScope);
@@ -746,6 +721,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
   }
 
+  /**
+   * Checks if division is called with two integers
+   *
+   * @param divNode node that represents the 'DIV' parser rule
+   * @return type int or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(DIVNode divNode) {
     divNode.setCurrentScope(this.currentScope);
@@ -754,6 +735,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
   }
 
+  /**
+   * Checks if addition is called with two integers
+   *
+   * @param addNode node that represents the 'ADD' parser rule
+   * @return type int or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ADDNode addNode) {
     addNode.setCurrentScope(this.currentScope);
@@ -762,6 +749,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
   }
 
+  /**
+   * Checks if subtraction is called with two integers
+   *
+   * @param subNode node that represents the 'SUB' parser rule
+   * @return type int or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(SUBNode subNode) {
     subNode.setCurrentScope(this.currentScope);
@@ -770,6 +763,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
   }
 
+  /**
+   * Checks if {@code ==} is called with two built in types
+   *
+   * @param equalsNode node that represents the 'EQUALS' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(EQUALSNode equalsNode) {
     equalsNode.setCurrentScope(this.currentScope);
@@ -778,6 +777,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
   }
 
+  /**
+   * Checks if {@code !=} is called with two built in types
+   *
+   * @param neaqualsNode node that represents the 'NEAQUALS' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(NEAQUALSNode neaqualsNode) {
     neaqualsNode.setCurrentScope(this.currentScope);
@@ -786,15 +791,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
   }
 
-  private boolean checkComparison(Symbol type1, Symbol type2) {
-    if (!(type1 instanceof BuiltIn) || !(type2 instanceof BuiltIn)) {
-      System.err.println(
-          "Cannot compare builtin types " + type1.getName() + " and " + type2.getName() + "!");
-      return false;
-    }
-    return true;
-  }
-
+  /**
+   * Checks if {@code >} is called with two integers
+   *
+   * @param greaterNode node that represents the 'GREATER' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(GREATERNode greaterNode) {
     greaterNode.setCurrentScope(this.currentScope);
@@ -803,6 +805,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
   }
 
+  /**
+   * Checks if {@code <} is called with two integers
+   *
+   * @param lessNode node that represents the 'LESS' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(LESSNode lessNode) {
     lessNode.setCurrentScope(this.currentScope);
@@ -811,6 +819,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
   }
 
+  /**
+   * Checks if {@code >=} is called with two integers
+   *
+   * @param geaqualsNode node that represents the 'GEAQUALS' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(GEAQUALSNode geaqualsNode) {
     geaqualsNode.setCurrentScope(this.currentScope);
@@ -819,6 +833,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
   }
 
+  /**
+   * Checks if {@code <=} is called with two integers
+   *
+   * @param leaqualsNode node that represents the 'LEAQUALS' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(LEAQUALSNode leaqualsNode) {
     leaqualsNode.setCurrentScope(this.currentScope);
@@ -827,19 +847,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
   }
 
-  private boolean checkBothIntegers(Symbol type1, Symbol type2) {
-    if (!this.builtInInt.equals(type1) || !this.builtInInt.equals(type2)) {
-      System.err.println(
-          "Cannot use types "
-              + (type1 == null ? "null" : type1.getName())
-              + " and "
-              + (type2 == null ? "null" : type2.getName())
-              + " in this context!");
-      return false;
-    }
-    return true;
-  }
-
+  /**
+   * Validates that both sides of an {@code &&} connector are of type bool
+   *
+   * @param andNode node that represents the 'AND' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ANDNode andNode) {
     andNode.setCurrentScope(this.currentScope);
@@ -857,6 +870,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return this.builtInBool;
   }
 
+  /**
+   * Validates that both sides of an {@code ||} connector are of type bool
+   *
+   * @param orNode node that represents the 'OR' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ORNode orNode) {
     orNode.setCurrentScope(this.currentScope);
@@ -874,37 +893,55 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return this.builtInBool;
   }
 
+  /**
+   * Validates Array access definition and dimension.
+   *
+   * @param arraccNode node that represents the 'ARRACC' parser rule
+   * @return the type of the value from the accessed array or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ARRACCNode arraccNode) {
     arraccNode.setCurrentScope(this.currentScope);
     Symbol symbol = currentScope.resolve(arraccNode.getIdNode().getId());
+    // Check if any symbol was found
     if (symbol == null) {
       System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
       return null;
     }
+    // Check if a variable was found
     if (!(symbol instanceof Variable variable)) {
       System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
       return null;
     }
+    // Check if found variable is an array
     if (!(variable.getType() instanceof Array array)) {
       System.err.println(
           "Cannot access index of non array variable " + arraccNode.getIdNode().getId());
       return null;
     }
+    // Check if array access dimension doesn't fit variable array dimension
     if (arraccNode.getDimension() > array.getDimension()) {
       System.err.println("Dimension mismatch in " + arraccNode.getIdNode().getId());
       return null;
     }
+    // Check if array is accessed with int
     for (var expr : arraccNode.getExprNodes()) {
       if (!this.builtInInt.equals(expr.accept(this))) {
         System.err.println("Cannot access index of array with non int type expression!");
         return null;
       }
     }
+    // return type or array with fitting dimension
     int newDimension = array.getDimension() - arraccNode.getDimension();
     return newDimension == 0 ? array.getType() : new Array(newDimension, array.getType());
   }
 
+  /**
+   * Checks if {@code !} operator is used with bool
+   *
+   * @param notNode node that represents the 'not' parser rule
+   * @return type bool or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(NOTNode notNode) {
     notNode.setCurrentScope(this.currentScope);
@@ -916,24 +953,48 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return this.builtInBool;
   }
 
+  /**
+   * Returns the builtin for the corresponding type
+   *
+   * @param boolNode node that represents the 'BOOL' parser rule
+   * @return type bool
+   */
   @Override
   public Symbol visit(BOOLNode boolNode) {
     boolNode.setCurrentScope(this.currentScope);
     return this.builtInBool;
   }
 
+  /**
+   * Returns the builtin for the corresponding type
+   *
+   * @param charNode node that represents the 'CHAR' parser rule
+   * @return type char
+   */
   @Override
   public Symbol visit(CHARNode charNode) {
     charNode.setCurrentScope(this.currentScope);
     return this.builtInChar;
   }
 
+  /**
+   * Returns the builtin for the corresponding type
+   *
+   * @param intNode node that represents the 'INT' parser rule
+   * @return type int
+   */
   @Override
   public Symbol visit(INTNode intNode) {
     intNode.setCurrentScope(this.currentScope);
     return this.builtInInt;
   }
 
+  /**
+   * Returns the type of the id
+   *
+   * @param idNode node that represents the 'ID' parser rule
+   * @return type or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(IDNode idNode) {
     idNode.setCurrentScope(this.currentScope);
@@ -945,9 +1006,16 @@ public class STBuilder implements ASTVisitor<Symbol> {
     return var.getType();
   }
 
+  /**
+   * This function checks if this constructor can be declared and does so if that's the case
+   *
+   * @param constructorNode node that represents the 'constructor' parser rule
+   * @return the class of the constructor or {@code null} if an error occurred
+   */
   @Override
   public Symbol visit(ConstructorNode constructorNode) {
     constructorNode.setCurrentScope(this.currentScope);
+    // Check if the constructor is declared in a class
     if (this.currentScope instanceof STClass stClass) {
       if (!stClass.getName().equals(constructorNode.getIdNode().getId())) {
         System.err.println(
@@ -960,9 +1028,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
       System.err.println("Cannot define Constructor outside of class");
       return null;
     }
+    // Check if constructor has been defined with this parameters
     List<Symbol> symbols = stClass.resolveAllMember(constructorNode.getIdNode().getId());
     for (var member : symbols) {
       if (member instanceof Function foundConstructor) {
+        // Found Constructor with same param length
         if (constructorNode.getParams().size() == foundConstructor.getParams().size()) {
           if (compareListsOfTypes(
               constructorNode.getParams(), foundConstructor.getParams(), false)) {
@@ -975,6 +1045,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
         }
       }
     }
+    // Defining a new constructor
     Function newConstructor =
         new Function(
             constructorNode.getIdNode().getId(),
@@ -983,23 +1054,363 @@ public class STBuilder implements ASTVisitor<Symbol> {
             constructorNode.getParams(),
             false);
     newConstructor.setHasBeenDefined(true);
-    for (var child : constructorNode.getParams()) {
+    currentScope.bind(newConstructor);
+    // Adding the params to the new constructor
+    defineParams(newConstructor, constructorNode.getParams());
+    // Handling the body of the constructor
+    this.currentScope = newConstructor;
+    constructorNode.getBlock().accept(this);
+    this.currentScope = this.currentScope.getParent();
+    return stClass;
+  }
+
+  /**
+   * Iterates through the given list and checks if its members can be called
+   *
+   * @param objectCalls a list of object call nodes that will be verified
+   * @param hasThis indicates if 'this.' is called at the start of object calls
+   * @return if the given object calls are valid
+   */
+  private boolean validateObjectCalls(List<ObjcallNode> objectCalls, boolean hasThis) {
+    Scope currentObjScope = this.currentScope;
+    // checks if currently in class and changes scope to this class
+    if (hasThis) {
+      Symbol foundClass = findMyClass(currentObjScope);
+      if (foundClass == null) {
+        System.err.println("Cannot use 'this' outside of class");
+        return false;
+      }
+      currentObjScope = (Scope) foundClass;
+    }
+    // Accepts each object call and checks if an object and not a builtin type is being accessed
+    for (var child : objectCalls) {
+      Symbol obj = child.accept(this);
+      if (obj == null) {
+        System.err.println(child.getIdNode().getId() + " could not be found!");
+        this.currentScope = currentObjScope;
+        return false;
+      }
+      if (obj.getType() instanceof STClass type) {
+        this.currentScope = type;
+      } else {
+        // Builtin types don't have members so they can't be accessed
+        System.err.println(
+            "Variable " + obj.getName() + " is from BuiltIn type and can't have any members!");
+        this.currentScope = currentObjScope;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Compares two types and returns the type if they are of the same type.
+   *
+   * @param type1 the first type
+   * @param type2 the second type
+   * @param usePoly indicates if this function should check for inheritance
+   * @return the common type if they are the same or {@code null} if not
+   */
+  private Symbol compareTypes(STType type1, STType type2, boolean usePoly) {
+    STType returnType = type1;
+    if (type1 instanceof Array varArray) {
+      if (type2 instanceof Array exprArray) {
+        if (varArray.getDimension() != exprArray.getDimension()) {
+          // They are not the same when both are arrays but with a different dimension
+          return null;
+        }
+        type1 = varArray.getType();
+        type2 = exprArray.getType();
+      } else {
+        return null;
+      }
+    }
+    // Check for polymorphie
+    if (usePoly && type1 instanceof STClass stClass1 && type2 instanceof STClass stClass2) {
+      while (stClass2 != null) {
+        if (stClass1.equals(stClass2)) {
+          return returnType;
+        }
+        stClass2 = (STClass) stClass2.getInheritedScope();
+      }
+      return null;
+      // They can only be builtin types at this point and can simply be compared
+    } else if (!type1.equals(type2)) {
+      return null;
+    }
+    return returnType;
+  }
+
+  /**
+   * Checks if the given id string is free or already defined in some way
+   *
+   * @param id the id name that should be checked
+   * @return if the string is allowed to be a new id
+   */
+  private boolean isAllowedVarID(String id) {
+    Symbol symbolInScope = currentScope.resolveMember(id);
+    if (symbolInScope != null) {
+      System.err.println("Variable " + id + " has already been declared in this scope!");
+      return false;
+    }
+    Symbol symbolInAllScopes = currentScope.resolve(id);
+    // If the found symbol is a scope it has to be a class or function not a variable
+    if (symbolInAllScopes instanceof Scope) {
+      System.err.println(
+          "Cannot use name of existing class or function '" + id + "' as variable name!");
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Searches all constructors of a given class and returns them in a list of Symbols
+   *
+   * @param name the name of the class whose constructors will be returned
+   * @return a list of found constructors
+   */
+  private List<Symbol> getAllConstructors(String name) {
+    Symbol symbol = currentScope.resolve(name);
+    // Check if anything could be found
+    if (symbol == null) {
+      System.err.println("Could not find class '" + name + "'!");
+      return new ArrayList<>();
+    }
+    // If a possible constructor was found
+    if (symbol instanceof Function function) {
+      if (function.getScope() instanceof STClass stClass) {
+        if (stClass.getName().equals(function.getName())) {
+          // The found function was a constructor of a class
+          return stClass.resolveAllMember(stClass.getName());
+        } else {
+          System.err.println("'" + name + "' is not a class!");
+          return new ArrayList<>();
+        }
+      } else {
+        System.err.println("'" + name + "' is not a class!");
+        return new ArrayList<>();
+      }
+    }
+    // If a class was found
+    if (symbol instanceof STClass stClass) {
+      return stClass.resolveAllMember(stClass.getName());
+    } else {
+      // If the found symbol was neither a function nor a class it has to be a variable
+      System.err.println("Cannot call variable '" + symbol.getName() + "' as constructor!");
+      return new ArrayList<>();
+    }
+  }
+
+  /**
+   * Compares the types of two lists by index and returns if they all equal
+   *
+   * @param list1 the first list
+   * @param list2 the second list
+   * @param usePoly indicates if the second list is allowed to have subclasses of classes in the
+   *     first list
+   * @return {@code true } if the types in the list match
+   */
+  private boolean compareListsOfTypes(
+      List<? extends ASTNode> list1, List<? extends ASTNode> list2, boolean usePoly) {
+    for (int i = 0; i < list1.size(); i++) {
+      // get and accept two nodes at the same index of both lists
+      ASTNode node1 = list2.get(i);
+      ASTNode node2 = list1.get(i);
+      Symbol type1 = node1.accept(this);
+      Symbol type2 = node2.accept(this);
+      if (type1 == null || type2 == null) {
+        // Error will be handled in visit expr
+        return false;
+      }
+      if (compareTypes((STType) type1, (STType) type2, usePoly) == null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * This function trys to declare a new function. It realizes overriding, overloading and checks
+   * for virtual when overriding
+   *
+   * @param fndeclNode a node that represents the 'fndecl' parser rule
+   * @param isDefinition indicates if the declaration is part of a definition
+   * @return the new function or {@code null} if an error occurred
+   */
+  private Function checkFunctionCanBeDefined(FndeclNode fndeclNode, boolean isDefinition) {
+    // Checking valid return type
+    Symbol type = fndeclNode.getReturntype().accept(this);
+    if (type == null) {
+      // Error will be handled in TypeNode
+      return null;
+    }
+    // Check valid function name
+    Symbol symbol = this.currentScope.resolve(fndeclNode.getIdNode().getId());
+    if (symbol instanceof STClass stClass) {
+      System.err.println(
+          "Function '" + stClass.getName() + "' cannot have the same name as a class");
+    }
+    // Check if function can be declared with this params
+    List<Symbol> memberSymbols = this.currentScope.resolveAll(fndeclNode.getIdNode().getId());
+    boolean didOverride = false;
+    for (var member : memberSymbols) {
+      if (!(member instanceof Function foundFunction)) {
+        // A not function with this name was found
+        System.err.println(
+            fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!");
+        return null;
+      }
+      if (fndeclNode.getParams().size() == foundFunction.getParams().size()) {
+        if (compareListsOfTypes(fndeclNode.getParams(), foundFunction.getParams(), false)) {
+          if (this.currentScope.equals(foundFunction.getScope())) {
+            // Found function is in the same class
+            if (!isDefinition || foundFunction.hasBeenDefined()) {
+              System.err.println(
+                  "Cannot override function '" + foundFunction.getName() + "' in same class!");
+              return null;
+            }
+            return foundFunction;
+          } else if (!foundFunction.isVirtual()) {
+            // found function is in parent class but not virtual
+            System.err.println(
+                "Cannot override non virtual function '" + foundFunction.getName() + "'!");
+            return null;
+          } else {
+            // found function is in parent class and virtual
+            didOverride = true;
+          }
+        }
+      }
+    }
+    // Check if this function needs to override but doesn't
+    if (!didOverride && fndeclNode.isOverride()) {
+      System.err.println(
+          "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!");
+      return null;
+    }
+    // create new function
+    Function newFunction =
+        new Function(
+            fndeclNode.getIdNode().getId(),
+            (STType) type,
+            this.currentScope,
+            fndeclNode.getParams(),
+            (didOverride || fndeclNode.isVirtual()));
+    // define all params in function scope
+    defineParams(newFunction, fndeclNode.getParams());
+    return newFunction;
+  }
+
+  /**
+   * Checks if the given scope is somewhere inside a class scope
+   *
+   * @param scope the scope in which the search should start
+   * @return the found class or {@code null} if nothing was found
+   */
+  private Symbol findMyClass(Scope scope) {
+    while (scope != null) {
+      // classes are scopes
+      if (scope instanceof STClass stClass) {
+        return stClass;
+      }
+      scope = scope.getParent();
+    }
+    return null;
+  }
+
+  /**
+   * Checks if the given scope is somewhere inside a function scope
+   *
+   * @param scope the scope in which the search should start
+   * @return the found function or {@code null} if nothing was found
+   */
+  private Function findMyFunction(Scope scope) {
+    while (scope.getParent() != null) {
+      // functions are scopes
+      if (scope instanceof Function function) {
+        return function;
+      }
+      scope = scope.getParent();
+    }
+    return null;
+  }
+
+  /**
+   * Checks if the given type is a bool and accepts the lock if that is the case
+   *
+   * @param conditionType the Symbol containing the type of this condition
+   * @param block the block that will be handled if the type is a bool
+   * @return {@code true} if the condition type is valid
+   */
+  private boolean handleConditionBlock(Symbol conditionType, BlockNode block) {
+    if (!this.builtInBool.equals(conditionType)) {
+      System.err.println(
+          "Type of variable '"
+              + (conditionType == null ? "null" : conditionType.getName())
+              + "' is not a valid condition type!");
+      return false;
+    }
+    this.currentScope = new Scope(currentScope);
+    block.accept(this);
+    this.currentScope = this.currentScope.getParent();
+    return true;
+  }
+
+  /**
+   * Binds all given parameters to the given function
+   *
+   * @param function the function that the params will be bound in
+   * @param paramNodes the params to be bound
+   */
+  private void defineParams(Function function, List<ParamNode> paramNodes) {
+    this.currentScope = function;
+    for (var child : paramNodes) {
       Symbol paramType = child.accept(this);
       if (paramType != null) {
         if (child.getIdentifier().isArray()) {
           paramType = new Array(child.getIdentifier().getDimension(), (STType) paramType);
         }
-        newConstructor.bind(
-            new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
+        function.bind(new Variable(child.getIdentifier().getIdNode().getId(), (STType) paramType));
       } else {
         // Error will be handled in TypeNode
-        return null;
+        return;
       }
     }
-    currentScope.bind(newConstructor);
-    this.currentScope = newConstructor;
-    constructorNode.getBlock().accept(this);
-    this.currentScope = this.currentScope.getParent();
-    return stClass;
+  }
+
+  /**
+   * Checks if both given types are built in types
+   *
+   * @param type1 the first type to compare
+   * @param type2 the second type to compare
+   * @return {@code true} if both types are built in types
+   */
+  private boolean checkComparison(Symbol type1, Symbol type2) {
+    if (!(type1 instanceof BuiltIn) || !(type2 instanceof BuiltIn)) {
+      System.err.println(
+          "Cannot compare builtin types " + type1.getName() + " and " + type2.getName() + "!");
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Checks if both given types are integers
+   *
+   * @param type1 the first type to compare
+   * @param type2 the second type to compare
+   * @return {@code true} if both types are integers
+   */
+  private boolean checkBothIntegers(Symbol type1, Symbol type2) {
+    if (!this.builtInInt.equals(type1) || !this.builtInInt.equals(type2)) {
+      System.err.println(
+          "Cannot use types "
+              + (type1 == null ? "null" : type1.getName())
+              + " and "
+              + (type2 == null ? "null" : type2.getName())
+              + " in this context!");
+      return false;
+    }
+    return true;
   }
 }

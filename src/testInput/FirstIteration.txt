@@ -1,8 +1,8 @@
 class A{
     int value;
-    A& operator=( A& rhs) {
-        (*this).value = rhs.value;    // "this" sollte erkannt werden
-        return *this;               // dito braucht man ein "*this" ...
+    A (){
+        A a();
+        return a;
     }
 };
 

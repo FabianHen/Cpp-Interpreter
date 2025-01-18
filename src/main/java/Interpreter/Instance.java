@@ -1,4 +1,3 @@
 package Interpreter;
 
-public class Instance {
-}
+public class Instance {}
