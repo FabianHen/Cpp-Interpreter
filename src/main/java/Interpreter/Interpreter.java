@@ -318,7 +318,11 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(OBJMEMNode objmemNode) {
-    return null;
+    Environment env = this.currentEnvironment;
+    validateObjectCalls(objmemNode.getObjcalls(), objmemNode.hasThis());
+    Object value = this.currentEnvironment.getVariable(objmemNode.getIdNode().getId());
+    this.currentEnvironment = env;
+    return value;
   }
 
   @Override
