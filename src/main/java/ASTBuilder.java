@@ -309,11 +309,17 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
       for (var param : ctx.paramlist().param()) {
         params.add((ParamNode) visit(param));
       }
+      IdentifierNode identifierNode = params.getFirst().getIdentifier();
+      // Check if copy constructor
+      boolean isCopyCon =
+          params.size() == 1
+              && identifierNode.isReference()
+              && params.getFirst().getTypeNode().getClassName().equals(ctx.ID().getText());
       return new ConstructorNode(
-          new IDNode(ctx.ID().getText()), params, (BlockNode) visit(ctx.block()));
+          new IDNode(ctx.ID().getText()), params, (BlockNode) visit(ctx.block()), isCopyCon);
     }
     return new ConstructorNode(
-        new IDNode(ctx.ID().getText()), new ArrayList<>(), (BlockNode) visit(ctx.block()));
+        new IDNode(ctx.ID().getText()), new ArrayList<>(), (BlockNode) visit(ctx.block()), false);
   }
 
   @Override

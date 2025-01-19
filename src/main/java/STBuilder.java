@@ -669,7 +669,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     this.currentScope = currentObjScope;
     // Throw error if found symbol is not an object
     if (!(symbol instanceof Variable variable)) {
-      System.err.println("Variable " + symbol.getName() + " could not be resolved!");
+      System.err.println("Variable " + objmemNode.getIdNode().getId() + " could not be resolved!");
       return null;
     }
     return variable.getType();

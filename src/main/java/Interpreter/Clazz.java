@@ -33,18 +33,22 @@ public class Clazz implements Callable {
 
   public List<Func> getFuncs(String name) {
     List<Func> funcs = new ArrayList<Func>();
-    if(functions.containsKey(name)) {
+    if (functions.containsKey(name)) {
       funcs.addAll(functions.get(name));
     }
-    if(this.superClass != null) {
+    if (this.superClass != null) {
       funcs.addAll(this.superClass.getFuncs(name));
     }
     return funcs;
   }
 
+  public ClassDefNode getClassDefNode() {
+    return classDefNode;
+  }
+
   public HashMap<String, Object> getFields(ASTVisitor<Object> interpreter) {
     HashMap<String, Object> hashMap = new HashMap<String, Object>();
-    if(superClass != null) {
+    if (superClass != null) {
       hashMap.putAll(superClass.getFields(interpreter));
     }
     for (ASTNode member : classDefNode.getChildren()) {

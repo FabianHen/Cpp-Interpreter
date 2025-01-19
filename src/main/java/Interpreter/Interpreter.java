@@ -126,17 +126,26 @@ public class Interpreter implements ASTVisitor<Object> {
     if (vardeclNode.isArray()) {
       array = createArray(vardeclNode.getIdentifier().getSizes(), 0);
       if (vardeclNode.getExpr() != null) {
-        if(!compareArrays(array, value)) {
+        if (!compareArrays(array, value)) {
           System.err.println("RUNTIME ERROR: Too many initializer values!");
           System.exit(0);
         }
       } else {
         value = array;
       }
+    } else if (vardeclNode.getType().getType() == Type.CUSTOM) {
+      if (vardeclNode.getExpr() != null) {
+        // Copy constructor
+        Clazz clazz =
+                (Clazz) this.currentEnvironment.getVariable(vardeclNode.getType().getClassName());
+        Instance instance = new Instance(this, clazz, this.currentEnvironment);
+        List<ExprNode> args = new ArrayList<>();
+        args.add(vardeclNode.getExpr());
+        instance.call(this, args);
+        value = instance;
+      }
     }
-
-    this.currentEnvironment.defineVariable(
-        vardeclNode.getIdentifier().getIdNode().getId(), value);
+    this.currentEnvironment.defineVariable(vardeclNode.getIdentifier().getIdNode().getId(), value);
     return null;
   }
 
@@ -267,7 +276,7 @@ public class Interpreter implements ASTVisitor<Object> {
       return null;
     }
     Object array[] = new Object[argsNode.getArguments().size()];
-    for(int i = 0; i < argsNode.getArguments().size(); i++) {
+    for (int i = 0; i < argsNode.getArguments().size(); i++) {
       array[i] = argsNode.getArguments().get(i).accept(this);
     }
     return array;
@@ -299,7 +308,6 @@ public class Interpreter implements ASTVisitor<Object> {
     Environment currentObjEnvironment = this.currentEnvironment;
     validateObjectCalls(fncallNode.getObjcalls(), fncallNode.hasThis());
     List<Func> foundFunctions = currentEnvironment.getFunctions(fncallNode.getIdNode().getId());
-
     for (Func func : foundFunctions) {
       if (func.getFndefNode().equals(fncallNode.getFndeclNode().getFndefNode())) {
         List<ExprNode> arguments =
@@ -548,9 +556,9 @@ public class Interpreter implements ASTVisitor<Object> {
         return false;
       }
       for (int i = 0; i < arr1.length; i++) {
-         if(!compareArrays(arr1[i], arr2[i])) {
-           return false;
-         }
+        if (!compareArrays(arr1[i], arr2[i])) {
+          return false;
+        }
       }
     }
     return true;

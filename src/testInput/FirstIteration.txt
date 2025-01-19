@@ -1,23 +1,28 @@
 class A{
 public:
     int var;
-    virtual void hello(int a){
-        print_char('A');
+    char test;
+    A(int a, char b){
+        var = a;
+        test = b;
+    }
+    A(A& a){
+        var = a.var;
+        test = a.test;
+        print_char('c');
         print_char('\n');
     }
 };
 
 class B : public A{
-public:
-    int varB;
-    void hello(){
-        print_char('B');
-        print_char('\n');
+    B(int a, char b){
+        var = a;
+        test = b;
     }
 };
 
-B b;
-b.var = 5;
-b.varB = 10;
+B a(3, 'a');
+A b = a;
 print_int(b.var);
-print_int(b.varB);
+print_char(b.test);
+print_char('\n');

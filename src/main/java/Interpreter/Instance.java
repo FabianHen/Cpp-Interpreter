@@ -1,8 +1,10 @@
 package Interpreter;
 
+import AST.ExprNode;
+
 import java.util.List;
 
-public class Instance extends Environment {
+public class Instance extends Environment implements Callable {
   private final Clazz clazz;
   private Interpreter interpreter;
 
@@ -30,5 +32,28 @@ public class Instance extends Environment {
       func.bind(interpreter.getEnvironment());
     }
     return funcs;
+  }
+
+  private void copyCon(Interpreter interpreter, List<ExprNode> args){
+    Instance instance = (Instance) args.getFirst().accept(interpreter);
+    for(var key: this.values.keySet()){
+      assignVariable(key, instance.getVariable(key));
+    }
+  }
+
+  @Override
+  public Object call(Interpreter interpreter, List<ExprNode> args) {
+    Environment env = interpreter.getEnvironment();
+    interpreter.setEnvironment(this);
+    for (var func : this.getFunctions(clazz.getClassDefNode().getIdNode().getId())) {
+      if (func.getConstructorNode().isCopyCon()) {
+        func.call(interpreter, args);
+        interpreter.setEnvironment(env);
+        return this;
+      }
+    }
+    this.copyCon(interpreter, args);
+    interpreter.setEnvironment(env);
+    return this;
   }
 }
