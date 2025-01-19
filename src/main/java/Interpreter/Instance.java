@@ -1,7 +1,6 @@
 package Interpreter;
 
 import AST.ExprNode;
-
 import java.util.List;
 
 public class Instance extends Environment implements Callable {
@@ -34,9 +33,8 @@ public class Instance extends Environment implements Callable {
     return funcs;
   }
 
-  private void copyCon(Interpreter interpreter, List<ExprNode> args){
-    Instance instance = (Instance) args.getFirst().accept(interpreter);
-    for(var key: this.values.keySet()){
+  public void copyInstance(Interpreter interpreter, Instance instance) {
+    for (var key : this.values.keySet()) {
       assignVariable(key, instance.getVariable(key));
     }
   }
@@ -52,7 +50,8 @@ public class Instance extends Environment implements Callable {
         return this;
       }
     }
-    this.copyCon(interpreter, args);
+    Instance instance = (Instance) args.getFirst().accept(interpreter);
+    this.copyInstance(interpreter, instance);
     interpreter.setEnvironment(env);
     return this;
   }

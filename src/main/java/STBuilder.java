@@ -801,7 +801,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
   }
 
   /**
-   * Checks if {@code >} is called with two integers
+   * Checks if {@code >} is called with two integers https://www.youtube.com/watch?v=YAgJ9XugGBo
    *
    * @param greaterNode node that represents the 'GREATER' parser rule
    * @return type bool or {@code null} if an error occurred

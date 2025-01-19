@@ -38,6 +38,9 @@ public class Interpreter implements ASTVisitor<Object> {
       } else if (member instanceof ConstructorNode constructorNode) {
         Object value = constructorNode.accept(this);
         clazz.putFunc((Func) value);
+      } else if (member instanceof OperatorNode operatorNode) {
+        Object value = operatorNode.accept(this);
+        clazz.putFunc((Func) value);
       }
     }
     currentEnvironment.defineVariable(classDefNode.getIdNode().getId(), clazz);
@@ -46,16 +49,29 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(BindingNode bindingNode) {
-    // TODO Arrays and objects
     String id =
         (bindingNode.getIdNode() == null
             ? bindingNode.getArraccNode().getIdNode().getId()
             : bindingNode.getIdNode().getId());
     Object value = bindingNode.getExpr().accept(this);
     if (bindingNode.getAssignop().equals("=")) {
+      Object variable = this.currentEnvironment.getVariable(id);
       if (bindingNode.getArraccNode() != null) {
-        Object array = this.currentEnvironment.getVariable(id);
-        setArrayValue(array, value, bindingNode.getArraccNode().getExprNodes(), 0);
+        setArrayValue(variable, value, bindingNode.getArraccNode().getExprNodes(), 0);
+        return null;
+      }
+      if (variable instanceof Instance instance) {
+        Environment env = this.currentEnvironment;
+        this.currentEnvironment = instance;
+        List<Func> funcs = instance.getFunctions("operator=");
+        if (funcs.isEmpty()) {
+          instance.copyInstance(this, (Instance) value);
+        } else {
+          List<ExprNode> args = new ArrayList<>();
+          args.add(bindingNode.getExpr());
+          funcs.getFirst().call(this, args);
+        }
+        this.currentEnvironment = env;
         return null;
       }
       this.currentEnvironment.assignVariable(id, value);
@@ -137,7 +153,7 @@ public class Interpreter implements ASTVisitor<Object> {
       if (vardeclNode.getExpr() != null) {
         // Copy constructor
         Clazz clazz =
-                (Clazz) this.currentEnvironment.getVariable(vardeclNode.getType().getClassName());
+            (Clazz) this.currentEnvironment.getVariable(vardeclNode.getType().getClassName());
         Instance instance = new Instance(this, clazz, this.currentEnvironment);
         List<ExprNode> args = new ArrayList<>();
         args.add(vardeclNode.getExpr());
@@ -335,7 +351,10 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(OperatorNode operatorNode) {
-    return null;
+    Func func = new Func("operator=", this.currentEnvironment);
+    func.setOperatorNode(operatorNode);
+    this.currentEnvironment.defineFunction("operator=", func);
+    return func;
   }
 
   @Override

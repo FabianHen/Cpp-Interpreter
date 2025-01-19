@@ -6,6 +6,11 @@ public:
         var = a;
         test = b;
     }
+    A& operator=( A& rhs) {
+        (*this).var = rhs.var;
+        print_char('=');
+        return *this;
+    }
     A(A& a){
         var = a.var;
         test = a.test;
@@ -21,8 +26,9 @@ class B : public A{
     }
 };
 
-B a(3, 'a');
-A b = a;
-print_int(b.var);
-print_char(b.test);
+A a(3, 'a');
+A b(5, 'b');
+a = b;
+print_int(a.var);
+print_char(a.test);
 print_char('\n');

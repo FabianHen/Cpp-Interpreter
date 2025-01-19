@@ -41,6 +41,7 @@ public class ConstructorNode extends ASTNode {
   public boolean isCopyCon() {
     return this.isCopyCon;
   }
+
   @Override
   public <T> T accept(ASTVisitor<T> visitor) {
     return visitor.visit(this);

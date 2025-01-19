@@ -7,15 +7,18 @@ import java.util.List;
 public class Func implements Callable {
   private FndefNode fndefNode;
   private ConstructorNode constructorNode;
+  private OperatorNode operatorNode;
   private Environment environment;
   private List<ParamNode> parameters;
   private final String funcName;
 
   public Func(String name, Environment environment) {
     this.fndefNode = null;
+    this.constructorNode = null;
+    this.operatorNode = null;
     this.environment = environment;
     this.funcName = name;
-    parameters = new ArrayList<ParamNode>();
+    parameters = new ArrayList<>();
   }
 
   public void bind(Environment environment) {
@@ -48,6 +51,17 @@ public class Func implements Callable {
     this.parameters = fndefNode.getFndecl().getParams();
   }
 
+  public void setOperatorNode(OperatorNode operatorNode) {
+    this.operatorNode = operatorNode;
+    ArrayList<ParamNode> params = new ArrayList<>();
+    ParamNode param =
+        new ParamNode(
+            new TypeNode(operatorNode.getParamType().getId()),
+            new IdentifierNode(operatorNode.getParamName(), true));
+    params.add(param);
+    this.parameters = params;
+  }
+
   @Override
   public Object call(Interpreter interpreter, List<ExprNode> args) {
     Environment preEnv = interpreter.getEnvironment();
@@ -59,10 +73,12 @@ public class Func implements Callable {
       funcEnv.defineVariable(param.getIdentifier().getIdNode().getId(), value.accept(interpreter));
     }
     Object returnValue;
-    if (fndefNode == null) {
+    if (constructorNode != null) {
       returnValue = constructorNode.getBlock().accept(interpreter);
-    } else {
+    } else if(fndefNode != null) {
       returnValue = fndefNode.getBlock().accept(interpreter);
+    }else {
+      returnValue = operatorNode.getBlock().accept(interpreter);
     }
     interpreter.setEnvironment(preEnv);
     return returnValue;

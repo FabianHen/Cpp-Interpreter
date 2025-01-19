@@ -20,7 +20,7 @@ public class OperatorNode extends ASTNode {
     addChild(blockNode);
   }
 
-  public BlockNode getBlockNode() {
+  public BlockNode getBlock() {
     return blockNode;
   }
 
