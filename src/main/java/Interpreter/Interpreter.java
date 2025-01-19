@@ -21,6 +21,14 @@ public class Interpreter implements ASTVisitor<Object> {
     for (var child : programNode.getChildren()) {
       child.accept(this);
     }
+    List<Func> mains = this.currentEnvironment.getFunctions("main");
+    for(var main : mains) {
+      if(main.getParameters().isEmpty() && main.getFndefNode().getFndecl().getReturntype().getType() == Type.INT) {
+        main.call(this,new ArrayList<>());
+        System.out.println("\n -----Successfully executed main function!-----");
+        System.exit(0);
+      }
+    }
     return null;
   }
 

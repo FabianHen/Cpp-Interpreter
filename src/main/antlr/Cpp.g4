@@ -9,7 +9,6 @@ stmt
     :   classDef ';'
     |   fndecl ';'
     |   fndef
-    |   blockStmt
     ;
 
 blockStmt
