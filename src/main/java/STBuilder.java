@@ -257,7 +257,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
               new Variable(
                   constructorCallNode.getInstancename().getId(), constructorFunction.getType());
           currentScope.bind(var);
-          //Save which constructor was called
+          // Save which constructor was called
           constructorCallNode.setFunction(constructorFunction);
           return constructorFunction.getType();
         }
@@ -631,11 +631,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
       // Check if param sizes match
       int size =
           (fncallNode.getArgsNode() != null ? fncallNode.getArgsNode().getArguments().size() : 0);
-      List<ExprNode> arguments = fncallNode.getArgsNode() != null ? fncallNode.getArgsNode().getArguments() : new ArrayList<>();
+      List<ExprNode> arguments =
+          fncallNode.getArgsNode() != null
+              ? fncallNode.getArgsNode().getArguments()
+              : new ArrayList<>();
       if (size == function.getParams().size()) {
         // Check if param and argument types match
-        if (compareListsOfTypes(
-            function.getParams(), arguments, true)) {
+        if (compareListsOfTypes(function.getParams(), arguments, true)) {
           // Save where the found function was declared
           fncallNode.setFndeclNode(function.getFndeclNode());
           return function.getType();

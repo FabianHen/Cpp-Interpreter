@@ -63,6 +63,7 @@ public class Function extends Scope implements Symbol {
   public void setFndeclNode(FndeclNode fndefNode) {
     this.fndeclNode = fndefNode;
   }
+
   public FndeclNode getFndeclNode() {
     return this.fndeclNode;
   }

@@ -31,7 +31,7 @@ public class ASTBuilder extends CppBaseVisitor<ASTNode> {
 
   @Override
   public ASTNode visitCHAR(CppParser.CHARContext ctx) {
-    if(ctx.CHAR().getText().contains("\\n")){
+    if (ctx.CHAR().getText().contains("\\n")) {
       return new CHARNode('\n');
     }
     return new CHARNode(ctx.CHAR().getText().charAt(1));

@@ -12,13 +12,15 @@ public:
             rec(++a);
         }
     }
-    void test2(int a){
-        print_int(a);
-    }
-    void test(int a){
-        test2(a);
+    int test(){
+        return var;
     }
 };
 
-A obj;
-obj.rec(0);
+A array[2];
+A a(10);
+A b(5);
+array[0] = a;
+array[1] = b;
+print_int(array[0].test());
+print_int(array[1].test());

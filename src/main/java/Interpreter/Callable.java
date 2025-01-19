@@ -1,8 +1,6 @@
 package Interpreter;
 
-import AST.ASTVisitor;
 import AST.ExprNode;
-
 import java.util.List;
 
 public interface Callable {

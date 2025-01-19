@@ -1,8 +1,7 @@
 import AST.ASTNode;
+import Interpreter.Interpreter;
 import java.io.IOException;
 import java.util.List;
-
-import Interpreter.Interpreter;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;

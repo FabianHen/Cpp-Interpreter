@@ -1,7 +1,6 @@
 package Interpreter;
 
 import AST.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,15 +53,15 @@ public class Func implements Callable {
     Environment preEnv = interpreter.getEnvironment();
     Environment funcEnv = new Environment(environment);
     interpreter.setEnvironment(funcEnv);
-    for(int i = 0; i < parameters.size(); i++) {
+    for (int i = 0; i < parameters.size(); i++) {
       ParamNode param = parameters.get(i);
       ExprNode value = args.get(i);
       funcEnv.defineVariable(param.getIdentifier().getIdNode().getId(), value.accept(interpreter));
     }
     Object returnValue;
-    if(fndefNode == null){
+    if (fndefNode == null) {
       returnValue = constructorNode.getBlock().accept(interpreter);
-    }else {
+    } else {
       returnValue = fndefNode.getBlock().accept(interpreter);
     }
     interpreter.setEnvironment(preEnv);

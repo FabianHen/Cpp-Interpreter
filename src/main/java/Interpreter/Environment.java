@@ -35,9 +35,7 @@ public class Environment {
     ArrayList<Func> arrayList = new ArrayList<Func>();
     arrayList.add(func);
     functions.put(name, arrayList);
-
   }
-
 
   public Object getVariable(String name) {
     Object value = values.get(name);
@@ -49,10 +47,10 @@ public class Environment {
 
   public List<Func> getFunctions(String name) {
     List<Func> values = new ArrayList<>();
-    if(functions.containsKey(name)) {
+    if (functions.containsKey(name)) {
       values = functions.get(name);
     }
-    if(enclosing != null) {
+    if (enclosing != null) {
       values.addAll(enclosing.getFunctions(name));
     }
     return values;
@@ -62,8 +60,7 @@ public class Environment {
     return enclosing;
   }
 
-  public void clear(){
+  public void clear() {
     values.clear();
   }
-
 }
