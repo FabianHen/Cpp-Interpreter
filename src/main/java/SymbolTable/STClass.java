@@ -41,7 +41,7 @@ public class STClass extends Scope implements STType {
     }
     // Check super class first
     if (inheritedScope != null) {
-      Symbol symbol = this.inheritedScope.resolveMember(name);
+      Symbol symbol = this.inheritedScope.resolve(name);
       if (symbol != null) {
         return symbol;
       }

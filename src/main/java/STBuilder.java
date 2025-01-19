@@ -188,7 +188,6 @@ public class STBuilder implements ASTVisitor<Symbol> {
       return null;
     }
     // Check if id can be declared
-
     String id = vardeclNode.getIdentifier().getIdNode().getId();
     if (!isAllowedVarID(id)) {
       return null;
@@ -579,7 +578,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(BlockNode blockNode) {
     blockNode.setCurrentScope(this.currentScope);
     for (var child : blockNode.getChildren()) {
-      child.accept(this);
+      if(child instanceof BlockNode) {
+        this.currentScope = new Scope(this.currentScope);
+        child.accept(this);
+        this.currentScope = this.currentScope.getParent();
+      }else{
+        child.accept(this);
+      }
     }
     return this.builtInVoid;
   }
@@ -1224,8 +1229,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
       List<? extends ASTNode> list1, List<? extends ASTNode> list2, boolean usePoly) {
     for (int i = 0; i < list1.size(); i++) {
       // get and accept two nodes at the same index of both lists
-      ASTNode node1 = list2.get(i);
-      ASTNode node2 = list1.get(i);
+      ASTNode node1 = list1.get(i);
+      ASTNode node2 = list2.get(i);
       Symbol type1 = node1.accept(this);
       Symbol type2 = node2.accept(this);
       if (type1 == null || type2 == null) {

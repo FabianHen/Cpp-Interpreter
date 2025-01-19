@@ -8,6 +8,7 @@ public class Func implements Callable {
   private FndefNode fndefNode;
   private ConstructorNode constructorNode;
   private OperatorNode operatorNode;
+
   private Environment environment;
   private List<ParamNode> parameters;
   private final String funcName;
@@ -70,14 +71,21 @@ public class Func implements Callable {
     for (int i = 0; i < parameters.size(); i++) {
       ParamNode param = parameters.get(i);
       ExprNode value = args.get(i);
-      funcEnv.defineVariable(param.getIdentifier().getIdNode().getId(), value.accept(interpreter));
+      if (param.getIdentifier().isReference()) {
+        funcEnv.defineVariable(
+            param.getIdentifier().getIdNode().getId(), value.accept(interpreter));
+      } else {
+        Value argsValue = (Value) value.accept(interpreter);
+        funcEnv.defineVariable(
+            param.getIdentifier().getIdNode().getId(), new Value(argsValue.getValue()));
+      }
     }
     Object returnValue;
     if (constructorNode != null) {
       returnValue = constructorNode.getBlock().accept(interpreter);
-    } else if(fndefNode != null) {
+    } else if (fndefNode != null) {
       returnValue = fndefNode.getBlock().accept(interpreter);
-    }else {
+    } else {
       returnValue = operatorNode.getBlock().accept(interpreter);
     }
     interpreter.setEnvironment(preEnv);

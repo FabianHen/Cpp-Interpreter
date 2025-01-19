@@ -49,53 +49,59 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(BindingNode bindingNode) {
+    Environment currentObjEnv = this.currentEnvironment;
     String id =
         (bindingNode.getIdNode() == null
             ? bindingNode.getArraccNode().getIdNode().getId()
             : bindingNode.getIdNode().getId());
-    Object value = bindingNode.getExpr().accept(this);
+    Value value = (Value) bindingNode.getExpr().accept(this);
+    validateObjectCalls(bindingNode.getObjcalls(), bindingNode.hasThis());
     if (bindingNode.getAssignop().equals("=")) {
-      Object variable = this.currentEnvironment.getVariable(id);
+      Value variable = (Value) this.currentEnvironment.getVariable(id);
       if (bindingNode.getArraccNode() != null) {
-        setArrayValue(variable, value, bindingNode.getArraccNode().getExprNodes(), 0);
+        setArrayValue(
+            variable.getValue(), value.getValue(), bindingNode.getArraccNode().getExprNodes(), 0);
+        this.currentEnvironment = currentObjEnv;
         return null;
       }
-      if (variable instanceof Instance instance) {
+      if (variable.getValue() instanceof Instance instance) {
         Environment env = this.currentEnvironment;
         this.currentEnvironment = instance;
         List<Func> funcs = instance.getFunctions("operator=");
         if (funcs.isEmpty()) {
-          instance.copyInstance(this, (Instance) value);
+          instance.copyInstance(this, (Instance) value.getValue());
         } else {
           List<ExprNode> args = new ArrayList<>();
           args.add(bindingNode.getExpr());
           funcs.getFirst().call(this, args);
         }
-        this.currentEnvironment = env;
+        this.currentEnvironment = currentObjEnv;
         return null;
       }
-      this.currentEnvironment.assignVariable(id, value);
+      this.currentEnvironment.assignVariable(id, value.getValue());
+      this.currentEnvironment = currentObjEnv;
       return null;
     }
-    int varValue = (int) this.currentEnvironment.getVariable(id);
+    int varValue = (int) ((Value) this.currentEnvironment.getVariable(id)).getValue();
     switch (bindingNode.getAssignop()) {
       case "+=":
-        this.currentEnvironment.assignVariable(id, varValue + (int) value);
+        this.currentEnvironment.assignVariable(id, varValue + (int) value.getValue());
         break;
       case "-=":
-        this.currentEnvironment.assignVariable(id, varValue - (int) value);
+        this.currentEnvironment.assignVariable(id, varValue - (int) value.getValue());
         break;
       case "*=":
-        this.currentEnvironment.assignVariable(id, varValue * (int) value);
+        this.currentEnvironment.assignVariable(id, varValue * (int) value.getValue());
         break;
       case "/=":
-        if ((int) value == 0) {
+        if ((int) value.getValue() == 0) {
           System.err.println("RUNTIME ERROR: Cannot divide by zero");
           System.exit(0);
         }
-        this.currentEnvironment.assignVariable(id, varValue * (int) value);
+        this.currentEnvironment.assignVariable(id, varValue * (int) value.getValue());
         break;
     }
+    this.currentEnvironment = currentObjEnv;
     return null;
   }
 
@@ -117,40 +123,44 @@ public class Interpreter implements ASTVisitor<Object> {
   public Object visit(VardeclNode vardeclNode) {
     String id = vardeclNode.getIdentifier().getIdNode().getId();
     Object array = null;
-    Object value = null;
+    Value value = null;
     if (vardeclNode.getExpr() == null) {
       switch (vardeclNode.getType().getType()) {
           // Define base values if no expression is given
         case INT:
-          value = 0;
+          value = new Value(0);
           break;
         case BOOL:
-          value = false;
+          value = new Value(false);
           break;
         case CHAR:
-          value = ' ';
+          value = new Value(' ');
           break;
         case CUSTOM:
           Clazz clazz =
               (Clazz) this.currentEnvironment.getVariable(vardeclNode.getType().getClassName());
-          value = clazz.call(this, new ArrayList<>());
+          value = new Value(clazz.call(this, new ArrayList<>()));
           break;
       }
     } else {
-      value = vardeclNode.getExpr().accept(this);
+      if (vardeclNode.getIdentifier().isReference()) {
+        value = (Value) vardeclNode.getExpr().accept(this);
+      } else {
+        value = new Value(((Value) vardeclNode.getExpr().accept(this)).getValue());
+      }
     }
     if (vardeclNode.isArray()) {
       array = createArray(vardeclNode.getIdentifier().getSizes(), 0);
       if (vardeclNode.getExpr() != null) {
-        if (!compareArrays(array, value)) {
+        if (!compareArrays(array, value.getValue())) {
           System.err.println("RUNTIME ERROR: Too many initializer values!");
           System.exit(0);
         }
       } else {
-        value = array;
+        value = new Value(array);
       }
     } else if (vardeclNode.getType().getType() == Type.CUSTOM) {
-      if (vardeclNode.getExpr() != null) {
+      if (vardeclNode.getExpr() != null && !vardeclNode.getIdentifier().isReference()){
         // Copy constructor
         Clazz clazz =
             (Clazz) this.currentEnvironment.getVariable(vardeclNode.getType().getClassName());
@@ -158,7 +168,7 @@ public class Interpreter implements ASTVisitor<Object> {
         List<ExprNode> args = new ArrayList<>();
         args.add(vardeclNode.getExpr());
         instance.call(this, args);
-        value = instance;
+        value = new Value(instance);
       }
     }
     this.currentEnvironment.defineVariable(vardeclNode.getIdentifier().getIdNode().getId(), value);
@@ -172,7 +182,8 @@ public class Interpreter implements ASTVisitor<Object> {
     Instance instance =
         (Instance)
             clazz.call(this, constructorCallNode.getArgsNode().getArguments(), constructorCallNode);
-    currentEnvironment.defineVariable(constructorCallNode.getInstancename().getId(), instance);
+    currentEnvironment.defineVariable(
+        constructorCallNode.getInstancename().getId(), new Value(instance));
     return null;
   }
 
@@ -211,14 +222,14 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(PrintNode printNode) {
-    System.out.print(printNode.getExpr().accept(this));
+    System.out.print(((Value) printNode.getExpr().accept(this)).getValue());
     return null;
   }
 
   @Override
   public Object visit(WhileNode whileNode) {
     this.currentEnvironment = new Environment(this.currentEnvironment);
-    while ((boolean) whileNode.getCondition().accept(this)) {
+    while ((boolean) ((Value) whileNode.getCondition().accept(this)).getValue()) {
       whileNode.getBlock().accept(this);
       currentEnvironment.clear();
     }
@@ -228,7 +239,7 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(IfNode ifNode) {
-    if ((boolean) ifNode.getCondition().accept(this)) {
+    if ((boolean) ((Value) ifNode.getCondition().accept(this)).getValue()) {
       ifNode.getBlock().accept(this);
       return null;
     }
@@ -236,7 +247,6 @@ public class Interpreter implements ASTVisitor<Object> {
       if ((boolean) elif.accept(this)) {
         return null;
       }
-      ;
     }
     if (ifNode.getElseblock() != null) {
       ifNode.getElseblock().accept(this);
@@ -246,7 +256,7 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(ElseifNode elseifNode) {
-    if ((boolean) elseifNode.getCondition().accept(this)) {
+    if ((boolean) ((Value) elseifNode.getCondition().accept(this)).getValue()) {
       elseifNode.getBlock().accept(this);
       return true;
     }
@@ -274,7 +284,7 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(IncDecNode incDecNode) {
-    int value = (int) incDecNode.getIdNode().accept(this);
+    int value = (int) ((Value) incDecNode.getIdNode().accept(this)).getValue();
     if (incDecNode.isInc()) {
       currentEnvironment.assignVariable(incDecNode.getIdNode().getId(), value + 1);
     } else {
@@ -283,7 +293,7 @@ public class Interpreter implements ASTVisitor<Object> {
     if (incDecNode.isPre()) {
       return incDecNode.getIdNode().accept(this);
     }
-    return value;
+    return new Value(value);
   }
 
   @Override
@@ -293,9 +303,9 @@ public class Interpreter implements ASTVisitor<Object> {
     }
     Object array[] = new Object[argsNode.getArguments().size()];
     for (int i = 0; i < argsNode.getArguments().size(); i++) {
-      array[i] = argsNode.getArguments().get(i).accept(this);
+      array[i] = ((Value) argsNode.getArguments().get(i).accept(this)).getValue();
     }
-    return array;
+    return new Value(array);
   }
 
   @Override
@@ -307,7 +317,7 @@ public class Interpreter implements ASTVisitor<Object> {
   public Object visit(BlockNode blockNode) {
     for (var child : blockNode.getChildren()) {
       if (child instanceof ReturnNode returnNode) {
-        return returnNode.accept(this);
+        return ((Value) returnNode.accept(this)).getValue();
       }
       child.accept(this);
     }
@@ -332,7 +342,7 @@ public class Interpreter implements ASTVisitor<Object> {
                 : fncallNode.getArgsNode().getArguments();
         Object value = func.call(this, arguments);
         this.currentEnvironment = currentObjEnvironment;
-        return value;
+        return new Value(value);
       }
     }
     this.currentEnvironment = currentObjEnvironment;
@@ -359,113 +369,117 @@ public class Interpreter implements ASTVisitor<Object> {
 
   @Override
   public Object visit(MULNode mulNode) {
-    int e1 = (int) mulNode.getE1().accept(this);
-    int e2 = (int) mulNode.getE2().accept(this);
-    return e1 * e2;
+    int e1 = (int) ((Value) mulNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) mulNode.getE2().accept(this)).getValue();
+    return new Value(e1 * e2);
   }
 
   @Override
   public Object visit(DIVNode divNode) {
-    int e1 = (int) divNode.getE1().accept(this);
-    int e2 = (int) divNode.getE2().accept(this);
+    int e1 = (int) ((Value) divNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) divNode.getE2().accept(this)).getValue();
     if (e2 == 0) {
       System.err.println("RUNTIME ERROR: Cannot divide by zero");
       System.exit(0);
     }
-    return e1 / e2;
+    return new Value(e1 / e2);
   }
 
   @Override
   public Object visit(ADDNode addNode) {
-    int e1 = (int) addNode.getE1().accept(this);
-    int e2 = (int) addNode.getE2().accept(this);
-    return e1 + e2;
+    int e1 = (int) ((Value) addNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) addNode.getE2().accept(this)).getValue();
+    return new Value(e1 + e2);
   }
 
   @Override
   public Object visit(SUBNode subNode) {
-    int e1 = (int) subNode.getE1().accept(this);
-    int e2 = (int) subNode.getE2().accept(this);
-    return e1 - e2;
+    int e1 = (int) ((Value) subNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) subNode.getE2().accept(this)).getValue();
+    return new Value(e1 - e2);
   }
 
   @Override
   public Object visit(EQUALSNode equalsNode) {
-    return equalsNode.getE1().accept(this) == equalsNode.getE2().accept(this);
+    Object obj1 = ((Value) equalsNode.getE1().accept(this)).getValue();
+    Object obj2 = ((Value) equalsNode.getE2().accept(this)).getValue();
+    return new Value(obj1 == obj2);
   }
 
   @Override
   public Object visit(NEAQUALSNode neaqualsNode) {
-    return neaqualsNode.getE1().accept(this) != neaqualsNode.getE2().accept(this);
+    Object obj1 = ((Value) neaqualsNode.getE1().accept(this)).getValue();
+    Object obj2 = ((Value) neaqualsNode.getE2().accept(this)).getValue();
+    return new Value(obj1 != obj2);
   }
 
   @Override
   public Object visit(GREATERNode greaterNode) {
-    int e1 = (int) greaterNode.getE1().accept(this);
-    int e2 = (int) greaterNode.getE2().accept(this);
-    return e1 > e2;
+    int e1 = (int) ((Value) greaterNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) greaterNode.getE2().accept(this)).getValue();
+    return new Value(e1 > e2);
   }
 
   @Override
   public Object visit(LESSNode lessNode) {
-    int e1 = (int) lessNode.getE1().accept(this);
-    int e2 = (int) lessNode.getE2().accept(this);
-    return e1 < e2;
+    int e1 = (int) ((Value) lessNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) lessNode.getE2().accept(this)).getValue();
+    return new Value(e1 < e2);
   }
 
   @Override
   public Object visit(GEAQUALSNode geaqualsNode) {
-    int e1 = (int) geaqualsNode.getE1().accept(this);
-    int e2 = (int) geaqualsNode.getE2().accept(this);
-    return e1 >= e2;
+    int e1 = (int) ((Value) geaqualsNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) geaqualsNode.getE2().accept(this)).getValue();
+    return new Value(e1 >= e2);
   }
 
   @Override
   public Object visit(LEAQUALSNode leaqualsNode) {
-    int e1 = (int) leaqualsNode.getE1().accept(this);
-    int e2 = (int) leaqualsNode.getE2().accept(this);
-    return e1 <= e2;
+    int e1 = (int) ((Value) leaqualsNode.getE1().accept(this)).getValue();
+    int e2 = (int) ((Value) leaqualsNode.getE2().accept(this)).getValue();
+    return new Value(e1 <= e2);
   }
 
   @Override
   public Object visit(ANDNode andNode) {
-    boolean e1 = (boolean) andNode.getE1().accept(this);
-    boolean e2 = (boolean) andNode.getE2().accept(this);
-    return e1 && e2;
+    boolean e1 = (boolean) ((Value) andNode.getE1().accept(this)).getValue();
+    boolean e2 = (boolean) ((Value) andNode.getE2().accept(this)).getValue();
+    return new Value(e1 && e2);
   }
 
   @Override
   public Object visit(ORNode orNode) {
-    boolean e1 = (boolean) orNode.getE1().accept(this);
-    boolean e2 = (boolean) orNode.getE2().accept(this);
-    return e1 || e2;
+    boolean e1 = (boolean) ((Value) orNode.getE1().accept(this)).getValue();
+    boolean e2 = (boolean) ((Value) orNode.getE2().accept(this)).getValue();
+    return new Value(e1 || e2);
   }
 
   @Override
   public Object visit(ARRACCNode arraccNode) {
-    Object array = this.currentEnvironment.getVariable(arraccNode.getIdNode().getId());
-    return getArrayValue(array, arraccNode.getExprNodes(), 0);
+    Value array = (Value) this.currentEnvironment.getVariable(arraccNode.getIdNode().getId());
+    return new Value(getArrayValue(array.getValue(), arraccNode.getExprNodes(), 0));
   }
 
   @Override
   public Object visit(NOTNode notNode) {
-    boolean condition = (boolean) notNode.getExpr().accept(this);
-    return !condition;
+    boolean condition = (boolean) ((Value) notNode.getExpr().accept(this)).getValue();
+    return new Value(!condition);
   }
 
   @Override
   public Object visit(BOOLNode boolNode) {
-    return boolNode.getValue();
+    return new Value(boolNode.getValue());
   }
 
   @Override
   public Object visit(CHARNode charNode) {
-    return charNode.getValue();
+    return new Value(charNode.getValue());
   }
 
   @Override
   public Object visit(INTNode intNode) {
-    return intNode.getValue();
+    return new Value(intNode.getValue());
   }
 
   @Override
@@ -501,8 +515,8 @@ public class Interpreter implements ASTVisitor<Object> {
     }
     // Accepts each object call and checks if an object and not a builtin type is being accessed
     for (var child : objectCalls) {
-      Object obj = child.accept(this);
-      if (obj instanceof Instance instance) {
+      Value obj = (Value) child.accept(this);
+      if (obj.getValue() instanceof Instance instance) {
         this.currentEnvironment = instance;
         continue;
       }
@@ -526,7 +540,7 @@ public class Interpreter implements ASTVisitor<Object> {
   }
 
   private Object createArray(List<ExprNode> sizes, int dimensionIndex) {
-    int size = (int) sizes.get(dimensionIndex).accept(this);
+    int size = (int) ((Value) sizes.get(dimensionIndex).accept(this)).getValue();
     if (dimensionIndex == sizes.size() - 1) {
       return new Object[size];
     } else {
@@ -539,7 +553,7 @@ public class Interpreter implements ASTVisitor<Object> {
   }
 
   private Object getArrayValue(Object array, List<ExprNode> indices, int dimensionIndex) {
-    int index = (int) indices.get(dimensionIndex).accept(this);
+    int index = (int) ((Value) indices.get(dimensionIndex).accept(this)).getValue();
     Object arr[] = (Object[]) array;
     if (index >= arr.length) {
       System.err.println("RUNTIME ERROR: Index out of bounds!");
@@ -555,7 +569,7 @@ public class Interpreter implements ASTVisitor<Object> {
 
   private void setArrayValue(
       Object array, Object value, List<ExprNode> indices, int dimensionIndex) {
-    int index = (int) indices.get(dimensionIndex).accept(this);
+    int index = (int) ((Value) indices.get(dimensionIndex).accept(this)).getValue();
     Object arr[] = (Object[]) array;
     if (index >= arr.length) {
       System.err.println("RUNTIME ERROR: Index out of bounds!");

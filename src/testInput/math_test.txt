@@ -1,6 +1,5 @@
 class Math {
     Math(){}
-    ~Math(){}
 
     int add(int a, int b) {
         return a + b;
@@ -18,3 +17,4 @@ int main(){
     print_int(product);
     return 0;
 }
+main();

@@ -21,7 +21,7 @@ public class Environment {
 
   public void assignVariable(String name, Object value) {
     if (values.containsKey(name)) {
-      values.put(name, value);
+      ((Value) values.get(name)).setValue(value);
     } else {
       enclosing.assignVariable(name, value);
     }

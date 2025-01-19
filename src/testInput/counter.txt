@@ -2,21 +2,22 @@
 class Counter{
     int i;
     Counter (int countVal){
-        this.i=countVal;
+        (*this).i = countVal;
     }
-    ~Counter(){}
     void count(){
-        int start=0;
-        while(start<i){
-            print_int(i);
+        int start = 0;
+        while(start < i){
+            print_int(start++);
             print_char('\n');
         }
     }
 };
-int main(){
-    Counter counter = new Counter(5);
-    counter.count();
 
+int main(){
+    Counter counter(5);
+    counter.count();
     return 0;
 }
+
+main();
 

@@ -46,19 +46,28 @@ public class Clazz implements Callable {
     return classDefNode;
   }
 
-  public HashMap<String, Object> getFields(ASTVisitor<Object> interpreter) {
-    HashMap<String, Object> hashMap = new HashMap<String, Object>();
+  public void setFields(ASTVisitor<Object> interpreter) {
     if (superClass != null) {
-      hashMap.putAll(superClass.getFields(interpreter));
+      superClass.setFields(interpreter);
     }
     for (ASTNode member : classDefNode.getChildren()) {
       if (member instanceof VardeclNode vardeclNode) {
-        String varID = vardeclNode.getIdentifier().getIdNode().getId();
-        Object value = vardeclNode.accept(interpreter);
-        hashMap.put(varID, value);
+        vardeclNode.accept(interpreter);
       }
     }
-    return hashMap;
+  }
+
+  public void callAllSuperConstructors(Instance instance, Interpreter interpreter) {
+    Clazz currentClass = this.superClass;
+    List<ExprNode> args = new ArrayList<>();
+    while (currentClass != null) {
+      for (var func : instance.getFunctions(currentClass.getClassDefNode().getIdNode().getId())) {
+        if (func.getParameters().isEmpty()) {
+          func.call(interpreter, args);
+        }
+      }
+      currentClass = currentClass.superClass;
+    }
   }
 
   @Override
@@ -68,11 +77,13 @@ public class Clazz implements Callable {
     interpreter.setEnvironment(instance);
     for (var func : instance.getFunctions(classDefNode.getIdNode().getId())) {
       if (func.getParameters().isEmpty()) {
+        callAllSuperConstructors(instance, interpreter);
         func.call(interpreter, args);
         interpreter.setEnvironment(env);
         return instance;
       }
     }
+    callAllSuperConstructors(instance, interpreter);
     interpreter.setEnvironment(env);
     return instance;
   }
@@ -85,7 +96,7 @@ public class Clazz implements Callable {
     for (var func : instance.getFunctions(classDefNode.getIdNode().getId())) {
       if (func.getConstructorNode()
           .equals(constructorCallNode.getFunction().getConstructorNode())) {
-
+        callAllSuperConstructors(instance, interpreter);
         func.call(interpreter, args);
         interpreter.setEnvironment(env);
         return instance;

@@ -10,7 +10,12 @@ public class Instance extends Environment implements Callable {
   public Instance(Interpreter interpreter, Clazz clazz, Environment enclosing) {
     super(enclosing);
     this.clazz = clazz;
-    this.values = clazz.getFields(interpreter);
+
+    Environment environment = interpreter.getEnvironment();
+    interpreter.setEnvironment(this);
+    clazz.setFields(interpreter);
+    interpreter.setEnvironment(environment);
+
     this.interpreter = interpreter;
   }
 
@@ -35,7 +40,7 @@ public class Instance extends Environment implements Callable {
 
   public void copyInstance(Interpreter interpreter, Instance instance) {
     for (var key : this.values.keySet()) {
-      assignVariable(key, instance.getVariable(key));
+      assignVariable(key, ((Value) instance.getVariable(key)).getValue());
     }
   }
 
@@ -45,12 +50,16 @@ public class Instance extends Environment implements Callable {
     interpreter.setEnvironment(this);
     for (var func : this.getFunctions(clazz.getClassDefNode().getIdNode().getId())) {
       if (func.getConstructorNode().isCopyCon()) {
+        clazz.callAllSuperConstructors(this, interpreter);
         func.call(interpreter, args);
         interpreter.setEnvironment(env);
         return this;
       }
     }
-    Instance instance = (Instance) args.getFirst().accept(interpreter);
+    interpreter.setEnvironment(env);
+    Instance instance = (Instance) ((Value) args.getFirst().accept(interpreter)).getValue();
+    interpreter.setEnvironment(this);
+    clazz.callAllSuperConstructors(this, interpreter);
     this.copyInstance(interpreter, instance);
     interpreter.setEnvironment(env);
     return this;
