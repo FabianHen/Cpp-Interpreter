@@ -1,11 +1,7 @@
 //Printer Klasse (abstrakt)
-1;
 class Printer {
-    virtual void printStr(char str[], int size) = 0;
-
-    virtual ~Printer() {
-        print_char('P');
-    }
+public:
+    virtual void printStr(char str[], int size);
 
     Printer(Printer other) {
         print_char('P');
@@ -13,11 +9,8 @@ class Printer {
 };
 
 //Test Klasse erbt von Printer und überschreibt die printStr Methode
-class Test : Printer {
-    ~Test() {
-        print_char('\n');
-    }
-
+class Test : public Printer {
+public:
     Test(Test other) {
         print_char('T');
     }
@@ -32,7 +25,7 @@ class Test : Printer {
     }
 
     bool runTest() {
-        char message[12] = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'}; 
+        char message[12] = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
         int size = 12;
 
         printStr(message, size);
@@ -40,15 +33,10 @@ class Test : Printer {
     }
 };
 
-//main Methode erstellt 
+//main Methode erstellt
 int main() {
     Test test;
     bool finished = test.runTest();
     print_bool(finished);
-
-    Test test2 = test;
-    bool finished2 = test2.runTest();
-    print_bool(finished2);
-
     return 0;
 }

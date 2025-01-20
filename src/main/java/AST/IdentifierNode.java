@@ -10,8 +10,8 @@ public class IdentifierNode extends ASTNode {
   private int dimension;
 
   // Constructor
-  public IdentifierNode(IDNode idNode, boolean isReference) {
-    super();
+  public IdentifierNode(IDNode idNode, boolean isReference, int line) {
+    super(line);
     this.idNode = idNode;
     this.sizes = new ArrayList<>();
     this.dimension = 0;
@@ -20,8 +20,9 @@ public class IdentifierNode extends ASTNode {
     addChild(this.idNode);
   }
 
-  public IdentifierNode(IDNode idNode, List<ExprNode> sizes, int dimension, boolean isReference) {
-    super();
+  public IdentifierNode(
+      IDNode idNode, List<ExprNode> sizes, int dimension, boolean isReference, int line) {
+    super(line);
     this.idNode = idNode;
     this.sizes = sizes;
     this.dimension = dimension;

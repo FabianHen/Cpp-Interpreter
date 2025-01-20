@@ -8,8 +8,8 @@ public class WhileNode extends ASTNode {
   private BlockNode block;
 
   // Constructor
-  public WhileNode(ExprNode condition, BlockNode block) {
-    super();
+  public WhileNode(ExprNode condition, BlockNode block, int line) {
+    super(line);
     this.condition = condition;
     this.block = block;
 

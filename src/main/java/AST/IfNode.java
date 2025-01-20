@@ -11,8 +11,12 @@ public class IfNode extends ASTNode {
 
   // Constructor
   public IfNode(
-      ExprNode condition, BlockNode block, List<ElseifNode> elseifBlocks, ElseNode elseBlock) {
-    super();
+      ExprNode condition,
+      BlockNode block,
+      List<ElseifNode> elseifBlocks,
+      ElseNode elseBlock,
+      int line) {
+    super(line);
     this.condition = condition;
     this.block = block;
     this.elseifBlocks = elseifBlocks;

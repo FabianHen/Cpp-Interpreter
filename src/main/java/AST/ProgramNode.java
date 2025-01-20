@@ -4,8 +4,8 @@ import java.util.*;
 
 public class ProgramNode extends ASTNode {
   // Constructor
-  public ProgramNode() {
-    super();
+  public ProgramNode(int line) {
+    super(line);
   }
 
   @Override

@@ -8,14 +8,14 @@ public class TypeNode extends ASTNode {
   private String className;
 
   // Constructor
-  public TypeNode(Type type) {
-    super();
+  public TypeNode(Type type, int line) {
+    super(line);
     this.type = type;
     this.className = type.name().toLowerCase();
   }
 
-  public TypeNode(String className) {
-    super();
+  public TypeNode(String className, int line) {
+    super(line);
     this.className = className;
     this.type = Type.CUSTOM;
   }

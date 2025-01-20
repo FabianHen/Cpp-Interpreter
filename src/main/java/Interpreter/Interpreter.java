@@ -70,7 +70,11 @@ public class Interpreter implements ASTVisitor<Object> {
       Value variable = (Value) this.currentEnvironment.getVariable(id);
       if (bindingNode.getArraccNode() != null) {
         setArrayValue(
-            variable.getValue(), value.getValue(), bindingNode.getArraccNode().getExprNodes(), 0);
+            variable.getValue(),
+            value.getValue(),
+            bindingNode.getArraccNode().getExprNodes(),
+            0,
+            bindingNode.getLine());
         this.currentEnvironment = currentObjEnv;
         return null;
       }
@@ -105,8 +109,7 @@ public class Interpreter implements ASTVisitor<Object> {
         break;
       case "/=":
         if ((int) value.getValue() == 0) {
-          System.err.println("RUNTIME ERROR: Cannot divide by zero");
-          System.exit(0);
+          logError("RUNTIME ERROR: Cannot divide by zero", bindingNode.getLine());
         }
         this.currentEnvironment.assignVariable(id, varValue * (int) value.getValue());
         break;
@@ -163,8 +166,7 @@ public class Interpreter implements ASTVisitor<Object> {
       array = createArray(vardeclNode.getIdentifier().getSizes(), 0);
       if (vardeclNode.getExpr() != null) {
         if (!compareArrays(array, value.getValue())) {
-          System.err.println("RUNTIME ERROR: Too many initializer values!");
-          System.exit(0);
+          logError("RUNTIME ERROR: Too many initializer values!", vardeclNode.getLine());
         }
       } else {
         value = new Value(array);
@@ -201,11 +203,11 @@ public class Interpreter implements ASTVisitor<Object> {
   public Object visit(FndeclNode fndeclNode) {
     FndefNode fndefNode = fndeclNode.getFndefNode();
     if (fndefNode == null) {
-      System.err.println(
+      logError(
           "RUNTIME ERROR: Cannot find definition of declared function '"
               + fndeclNode.getIdNode().getId()
-              + "'!");
-      System.exit(0);
+              + "'!",
+          fndeclNode.getLine());
     }
     fndefNode.accept(this);
     return null;
@@ -217,7 +219,6 @@ public class Interpreter implements ASTVisitor<Object> {
       return returnNode.getExpr().accept(this);
     }
     if (returnNode.hasThis()) {
-      // TODO find current object of class
       return new Value(findMyInstance(this.currentEnvironment));
     }
     return null;
@@ -385,7 +386,7 @@ public class Interpreter implements ASTVisitor<Object> {
       }
     }
     this.currentEnvironment = currentObjEnvironment;
-    System.err.println("RUNTIME ERROR: Function was declared but never defined!");
+    logError("RUNTIME ERROR: Function was declared but never defined!", fncallNode.getLine());
     return null;
   }
 
@@ -418,8 +419,7 @@ public class Interpreter implements ASTVisitor<Object> {
     int e1 = (int) ((Value) divNode.getE1().accept(this)).getValue();
     int e2 = (int) ((Value) divNode.getE2().accept(this)).getValue();
     if (e2 == 0) {
-      System.err.println("RUNTIME ERROR: Cannot divide by zero");
-      System.exit(0);
+      logError("RUNTIME ERROR: Cannot divide by zero", divNode.getLine());
     }
     return new Value(e1 / e2);
   }
@@ -497,7 +497,8 @@ public class Interpreter implements ASTVisitor<Object> {
   @Override
   public Object visit(ARRACCNode arraccNode) {
     Value array = (Value) this.currentEnvironment.getVariable(arraccNode.getIdNode().getId());
-    return new Value(getArrayValue(array.getValue(), arraccNode.getExprNodes(), 0));
+    return new Value(
+        getArrayValue(array.getValue(), arraccNode.getExprNodes(), 0, arraccNode.getLine()));
   }
 
   @Override
@@ -547,7 +548,7 @@ public class Interpreter implements ASTVisitor<Object> {
     if (hasThis) {
       Environment foundInstance = findMyInstance(currentObjEnvironment);
       if (foundInstance == null) {
-        System.err.println("Cannot use 'this' outside of class");
+        logError("Cannot use 'this' outside of class", objectCalls.getFirst().getLine());
         return false;
       }
       this.currentEnvironment = foundInstance;
@@ -559,8 +560,7 @@ public class Interpreter implements ASTVisitor<Object> {
         this.currentEnvironment = instance;
         continue;
       }
-      System.err.println("RUNTIME ERROR: Error while handling objcalls!");
-      System.exit(0);
+      logError("RUNTIME ERROR: Error while handling objcalls!", objectCalls.getFirst().getLine());
       this.currentEnvironment = currentObjEnvironment;
       return false;
     }
@@ -591,33 +591,31 @@ public class Interpreter implements ASTVisitor<Object> {
     }
   }
 
-  private Object getArrayValue(Object array, List<ExprNode> indices, int dimensionIndex) {
+  private Object getArrayValue(Object array, List<ExprNode> indices, int dimensionIndex, int line) {
     int index = (int) ((Value) indices.get(dimensionIndex).accept(this)).getValue();
     Object arr[] = (Object[]) array;
     if (index >= arr.length) {
-      System.err.println("RUNTIME ERROR: Index out of bounds!");
-      System.exit(0);
+      logError("RUNTIME ERROR: Index out of bounds!", line);
     }
 
     if (dimensionIndex == indices.size() - 1) {
       return arr[index];
     } else {
-      return getArrayValue(arr[index], indices, ++dimensionIndex);
+      return getArrayValue(arr[index], indices, ++dimensionIndex, line);
     }
   }
 
   private void setArrayValue(
-      Object array, Object value, List<ExprNode> indices, int dimensionIndex) {
+      Object array, Object value, List<ExprNode> indices, int dimensionIndex, int line) {
     int index = (int) ((Value) indices.get(dimensionIndex).accept(this)).getValue();
     Object arr[] = (Object[]) array;
     if (index >= arr.length) {
-      System.err.println("RUNTIME ERROR: Index out of bounds!");
-      System.exit(0);
+      logError("RUNTIME ERROR: Index out of bounds!", line);
     }
     if (dimensionIndex == indices.size() - 1) {
       arr[index] = value;
     } else {
-      setArrayValue(arr[index], value, indices, ++dimensionIndex);
+      setArrayValue(arr[index], value, indices, ++dimensionIndex, line);
     }
   }
 
@@ -634,5 +632,10 @@ public class Interpreter implements ASTVisitor<Object> {
       }
     }
     return true;
+  }
+
+  private void logError(String msg, int line) {
+    System.err.println("Error; [" + line + "]: " + msg);
+    System.exit(0);
   }
 }

@@ -10,8 +10,8 @@ public class ConstructorCallNode extends ASTNode {
   private Function function;
 
   // Constructor
-  public ConstructorCallNode(IDNode typeName, IDNode instanceName, ArgsNode args) {
-    super();
+  public ConstructorCallNode(IDNode typeName, IDNode instanceName, ArgsNode args, int line) {
+    super(line);
     this.typeName = typeName;
     this.instanceName = instanceName;
     this.args = args;

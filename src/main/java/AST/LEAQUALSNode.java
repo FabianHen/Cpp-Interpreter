@@ -8,8 +8,8 @@ public class LEAQUALSNode extends ExprNode {
   private ExprNode e2;
 
   // Constructor
-  public LEAQUALSNode(ExprNode e1, ExprNode e2) {
-    super();
+  public LEAQUALSNode(ExprNode e1, ExprNode e2, int line) {
+    super(line);
     this.e1 = e1;
     this.e2 = e2;
 

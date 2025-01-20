@@ -7,8 +7,8 @@ public class ElseNode extends ASTNode {
   private BlockNode block;
 
   // Constructor
-  public ElseNode(BlockNode block) {
-    super();
+  public ElseNode(BlockNode block, int line) {
+    super(line);
     this.block = block;
 
     addChild(block);

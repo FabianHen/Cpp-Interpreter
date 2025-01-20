@@ -57,8 +57,9 @@ public class Func implements Callable {
     ArrayList<ParamNode> params = new ArrayList<>();
     ParamNode param =
         new ParamNode(
-            new TypeNode(operatorNode.getParamType().getId()),
-            new IdentifierNode(operatorNode.getParamName(), true));
+            new TypeNode(operatorNode.getParamType().getId(), operatorNode.getLine()),
+            new IdentifierNode(operatorNode.getParamName(), true, operatorNode.getLine()),
+            operatorNode.getLine());
     params.add(param);
     this.parameters = params;
   }

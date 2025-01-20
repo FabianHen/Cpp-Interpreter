@@ -8,8 +8,8 @@ public class GREATERNode extends ExprNode {
   private ExprNode e2;
 
   // Constructor
-  public GREATERNode(ExprNode e1, ExprNode e2) {
-    super();
+  public GREATERNode(ExprNode e1, ExprNode e2, int line) {
+    super(line);
     this.e1 = e1;
     this.e2 = e2;
 

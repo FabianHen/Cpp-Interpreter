@@ -8,8 +8,8 @@ public class PrintNode extends ASTNode {
   private Type type;
 
   // Constructor
-  public PrintNode(ExprNode expr, Type type) {
-    super();
+  public PrintNode(ExprNode expr, Type type, int line) {
+    super(line);
     this.expr = expr;
     this.type = type;
 

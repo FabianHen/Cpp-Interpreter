@@ -7,8 +7,8 @@ public class ObjcallNode extends ASTNode {
   private ARRACCNode arracNode;
 
   // Constructor
-  public ObjcallNode(IDNode idNode, FncallNode fncallNode, ARRACCNode arracNode) {
-    super();
+  public ObjcallNode(IDNode idNode, FncallNode fncallNode, ARRACCNode arracNode, int line) {
+    super(line);
     this.idNode = idNode;
     this.fncallNode = fncallNode;
     this.arracNode = arracNode;

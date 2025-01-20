@@ -7,8 +7,8 @@ public class VardeclNode extends ASTNode {
   private ExprNode expr;
 
   // Constructor
-  public VardeclNode(TypeNode type, IdentifierNode identifier, ExprNode expr) {
-    super();
+  public VardeclNode(TypeNode type, IdentifierNode identifier, ExprNode expr, int line) {
+    super(line);
     this.type = type;
     this.identifier = identifier;
     this.expr = expr;

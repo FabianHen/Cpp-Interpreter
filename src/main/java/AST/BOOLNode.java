@@ -7,8 +7,8 @@ public class BOOLNode extends ExprNode {
   private boolean value;
 
   // Constructor
-  public BOOLNode(boolean value) {
-    super();
+  public BOOLNode(boolean value, int line) {
+    super(line);
     this.value = value;
   }
 

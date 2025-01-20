@@ -6,8 +6,8 @@ public class ParamNode extends ASTNode {
   private IdentifierNode identifier;
 
   // Constructor
-  public ParamNode(TypeNode type, IdentifierNode identifier) {
-    super();
+  public ParamNode(TypeNode type, IdentifierNode identifier, int line) {
+    super(line);
     this.type = type;
     this.identifier = identifier;
 

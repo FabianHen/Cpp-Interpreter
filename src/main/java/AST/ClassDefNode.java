@@ -9,8 +9,8 @@ public class ClassDefNode extends ASTNode {
   private List<ASTNode> classMembers;
 
   // Constructor
-  public ClassDefNode(IDNode idNode, IDNode parentClass, List<ASTNode> classMembers) {
-    super();
+  public ClassDefNode(IDNode idNode, IDNode parentClass, List<ASTNode> classMembers, int line) {
+    super(line);
     this.idNode = idNode;
     this.parentClass = parentClass;
     this.classMembers = classMembers;

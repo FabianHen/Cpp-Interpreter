@@ -15,8 +15,8 @@ public class FndeclNode extends ASTNode {
   private FndefNode fndefNode;
 
   // Constructor
-  public FndeclNode(TypeNode returnType, IDNode idNode, List<ParamNode> params) {
-    super();
+  public FndeclNode(TypeNode returnType, IDNode idNode, List<ParamNode> params, int line) {
+    super(line);
     this.returnType = returnType;
     this.idNode = idNode;
     this.params = params;

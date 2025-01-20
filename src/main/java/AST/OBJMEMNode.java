@@ -11,8 +11,8 @@ public class OBJMEMNode extends ExprNode {
 
   // Constructor
   public OBJMEMNode(
-      List<ObjcallNode> objcalls, IDNode idNode, boolean hasThis, ARRACCNode arraccNode) {
-    super();
+      List<ObjcallNode> objcalls, IDNode idNode, boolean hasThis, ARRACCNode arraccNode, int line) {
+    super(line);
     this.objcalls = objcalls;
     this.idNode = idNode;
     this.hasThis = hasThis;
