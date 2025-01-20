@@ -16,8 +16,11 @@ int main() {
     char &cc = c;
 
     print_bool(aa);  //  1
+    print_char('\n');
     print_int(bb);   // 42
+    print_char('\n');
     print_char(cc);  // 'c'
+    print_char('\n');
 
 
     // Zugriff auf Objekte über die Referenz
@@ -26,8 +29,11 @@ int main() {
     cc = 'x';
 
     print_bool(a);  // 0
+    print_char('\n');
     print_int(b);   // 7
+    print_char('\n');
     print_char(c);  // 'x'
+    print_char('\n');
 
 
     // Referenzen auf Referenzen
@@ -35,6 +41,7 @@ int main() {
 
     aaa = true;
     print_bool(a);  // 1
+    print_char('\n');
 
 
     // Re-Definition darf nicht akzeptiert werden

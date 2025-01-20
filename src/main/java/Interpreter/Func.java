@@ -72,11 +72,13 @@ public class Func implements Callable {
     for (int i = 0; i < parameters.size(); i++) {
       ParamNode param = parameters.get(i);
       ExprNode value = args.get(i);
+      interpreter.setEnvironment(preEnv);
+      Value argsValue = (Value) value.accept(interpreter);
+      interpreter.setEnvironment(funcEnv);
       if (param.getIdentifier().isReference()) {
         funcEnv.defineVariable(
-            param.getIdentifier().getIdNode().getId(), value.accept(interpreter));
+            param.getIdentifier().getIdNode().getId(),argsValue);
       } else {
-        Value argsValue = (Value) value.accept(interpreter);
         funcEnv.defineVariable(
             param.getIdentifier().getIdNode().getId(), new Value(argsValue.getValue()));
       }
