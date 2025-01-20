@@ -60,7 +60,7 @@ public class STClass extends Scope implements STType {
       list = new ArrayList<Symbol>();
     }
     if (inheritedScope != null) {
-      list.addAll(inheritedScope.resolveAllMember(name));
+      list.addAll(inheritedScope.resolveAll(name));
     }
     return list;
   }

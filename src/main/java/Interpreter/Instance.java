@@ -19,6 +19,10 @@ public class Instance extends Environment implements Callable {
     this.interpreter = interpreter;
   }
 
+  public Clazz getClazz() {
+    return clazz;
+  }
+
   @Override
   public void assignVariable(String name, Object value) {
     super.assignVariable(name, value);

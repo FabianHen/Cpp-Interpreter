@@ -21,6 +21,10 @@ public class Clazz implements Callable {
     functions = new HashMap<String, List<Func>>();
   }
 
+  public Clazz getSuperClass() {
+    return superClass;
+  }
+
   public void putFunc(Func func) {
     if (functions.containsKey(func.getFuncName())) {
       functions.get(func.getFuncName()).add(func);

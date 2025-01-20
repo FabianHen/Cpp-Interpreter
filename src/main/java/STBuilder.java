@@ -346,6 +346,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     fndefNode.setCurrentScope(this.currentScope);
     Function function = checkFunctionCanBeDefined(fndefNode.getFndecl(), fndefNode);
     if (function != null) {
+      function.getFndeclNode().setCurrentScope(this.currentScope);
       function.getFndeclNode().setFndefNode(fndefNode);
       function.setHasBeenDefined(true);
       this.currentScope.bind(function);
@@ -1294,6 +1295,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
             return null;
           } else {
             // found function is in parent class and virtual
+            foundFunction.getFndeclNode().addOverridingFndecl(fndeclNode);
             didOverride = true;
           }
         }

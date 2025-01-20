@@ -1,87 +1,124 @@
 /*
- * Einfache Testfaelle fuer statische und dynamische Polymorphie in C++
+ * Einfache Testfälle für Klassen in C++
  *
  */
 
 
 class A {
 public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
-    int aval;
-    A() { aval = 99; }
-    A(int x) { aval = x; }
+    int value;
+};
 
-    virtual void foo() { print_char('A'); print_char('f'); print_int(aval); }
+class B {
+public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
+    int value;
+    B() { value = 0; }
+    B(int x) { value = x; }
+    B(B& rhs) { value = rhs.value; }
+    B& operator=( B& rhs) {
+        (*this).value = rhs.value;    // "this" sollte erkannt werden
+        return *this;               // dito braucht man ein "*this" ...
+    }
 
 };
 
-class B : public A {
+class C {
 public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
-    int bval;
-    B() { bval = 77; }
-    B(int x) { bval = x; }
 
-    // Ueberschriebene Methode aus A
-    virtual void foo() { print_char('B'); print_char('f'); print_int(aval); print_int(bval); }
-
-    // eigene Methode
-    virtual void bar() { print_char('B'); print_char('b'); print_int(aval); print_int(bval); }
-
-};
-
-class C : public B {
-public:     // es reicht, wenn alles public ist (hier nur, damit das Beispiel mit g++ kompiliert)
-    int cval;
-    C(int x) {cval = x; }
-
-    // Ueberschriebene Methode aus B
-    void foo() { print_char('C'); print_char('f'); print_int(aval); print_int(bval); print_int(cval); }
-
-    // eigene Methode
-    void bar() { print_char('C'); print_char('b'); print_int(aval); print_int(bval); print_int(cval); }
-
+    int value;
+    C() { value = 0; }
+    C(int x) { value = x; }
 };
 
 
 int main() {
     {
-        // Statische Polymorphie (Normalfall)
-        print_char(' '); print_char('A'); print_char(' ');  // 'A'
+        // Klasse mit Defaults (C'tor, Zuweisung)
+        print_char('A');        // 'A'
 
-        B b(9);
-        A a = b;
+        A x;
+        x.value = 9;
+        print_int(x.value);     // 9
 
-        b.foo();    // B, f, 99, 9
-        b.bar();    // B, b, 99, 9
+        A y = x;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 9
 
-        a.foo();    // A, f, 99         => statische Polymorphie
-//        a.bar();    // nicht erlaubt!
+        y.value = 7;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+
+        A z = y;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+        print_int(z.value);     // 7
+
+        A foo;
+        foo = z;
+        z.value = 99;
+        print_int(foo.value);   // 7
+        print_int(z.value);     // 99
     }
+
 
     {
-        print_char(' '); print_char('B'); print_char(' ');
+        // Klasse mit selbst implementierten C'toren und Zuweisung
+        print_char('B');        // 'B'
 
-        B b(9);
-        A &a = b;
+        B x;
+        x.value = 9;
+        print_int(x.value);     // 9
 
-        b.foo();    // B, f, 99, 9
-        b.bar();    // B, b, 99, 9
+        B y = x;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 9
 
-        a.foo();    // A, f, 99         => statische Polymorphie
+        y.value = 7;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+
+        B z = y;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+        print_int(z.value);     // 7
+
+        B foo;
+        foo = z;
+        z.value = 99;
+        print_int(foo.value);   // 7
+        print_int(z.value);     // 99
     }
+
 
     {
-        // Dynamische Polymorphie (Basisklassenreferenz und virtuelle Methode)
-        print_char(' '); print_char('C'); print_char(' ');  // 'C'
+        // Klasse mit TEILWEISE selbst implementierten C'toren und Zuweisung, Rest Default vom Compiler
+        print_char('C');        // 'C'
 
-        C c(9);
-        B &b = c;
+        C x;
+        x.value = 9;
+        print_int(x.value);     // 9
 
-        c.foo();    // C, f, 99, 77, 9
-        c.bar();    // C, b, 99, 77, 9
+        C y = x;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 9
 
-        b.foo();    // C, f, 99, 77, 9      => dynamische Polymorphie
-        b.bar();    // B, b, 99, 77         => statische Polymorphie
+        y.value = 7;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+
+        C z = y;
+        print_int(x.value);     // 9
+        print_int(y.value);     // 7
+        print_int(z.value);     // 7
+
+        C foo;
+        foo = z;
+        z.value = 99;
+        print_int(foo.value);   // 7
+        print_int(z.value);     // 99
     }
+
+
     return 0;
 }
 

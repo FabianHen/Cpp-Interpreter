@@ -1,6 +1,8 @@
 package Interpreter;
 
 import AST.*;
+import SymbolTable.STClass;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,6 +210,7 @@ public class Interpreter implements ASTVisitor<Object> {
     }
     if (returnNode.hasThis()) {
       // TODO find current object of class
+      return new Value(findMyInstance(this.currentEnvironment));
     }
     return null;
   }
@@ -337,10 +340,38 @@ public class Interpreter implements ASTVisitor<Object> {
     for (Func func : foundFunctions) {
       if (func.getFndefNode().equals(fncallNode.getFndeclNode().getFndefNode())) {
         List<ExprNode> arguments =
-            fncallNode.getArgsNode() == null
-                ? new ArrayList<>()
-                : fncallNode.getArgsNode().getArguments();
-        Object value = func.call(this, arguments);
+                fncallNode.getArgsNode() == null
+                        ? new ArrayList<>()
+                        : fncallNode.getArgsNode().getArguments();
+        if(fncallNode.getFndeclNode().getOverridingFndecls().isEmpty()) {
+          Object value = func.call(this, arguments);
+          this.currentEnvironment = currentObjEnvironment;
+          return new Value(value);
+        }
+        Object value = null;
+        Clazz currentClass = ((Instance)this.currentEnvironment).getClazz();
+        String funcClassName = ((STClass)fncallNode.getFndeclNode().getCurrentScope()).getName();
+        while(currentClass != null) {
+          String className = currentClass.getClassDefNode().getIdNode().getId();
+          if(className.equals(funcClassName)) {
+            value = func.call(this, arguments);
+            break;
+          }
+          for (var fndecl : fncallNode.getFndeclNode().getOverridingFndecls()) {
+            String currFuncClassName = ((STClass)fndecl.getCurrentScope()).getName();
+            if(className.equals(currFuncClassName)) {
+              for(var func2 : foundFunctions) {
+                if (func2.getFndefNode().equals(fndecl.getFndefNode())) {
+                  value = func2.call(this, arguments);
+                  this.currentEnvironment = currentObjEnvironment;
+                  return new Value(value);
+                }
+              }
+              break;
+            }
+          }
+          currentClass = currentClass.getSuperClass();
+        }
         this.currentEnvironment = currentObjEnvironment;
         return new Value(value);
       }

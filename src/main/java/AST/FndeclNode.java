@@ -1,5 +1,6 @@
 package AST;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FndeclNode extends ASTNode {
@@ -9,6 +10,7 @@ public class FndeclNode extends ASTNode {
   private List<ParamNode> params;
   private boolean isVirtual;
   private boolean isOverride;
+  private List<FndeclNode> overridingFndecls;
   // indicates where the function of this declaration is defined
   private FndefNode fndefNode;
 
@@ -20,6 +22,7 @@ public class FndeclNode extends ASTNode {
     this.params = params;
     this.isVirtual = false;
     this.isOverride = false;
+    this.overridingFndecls = new ArrayList<FndeclNode>();
     fndefNode = null;
     addChild(returnType);
     addChild(idNode);
@@ -64,6 +67,18 @@ public class FndeclNode extends ASTNode {
 
   public void setFndefNode(FndefNode fndefNode) {
     this.fndefNode = fndefNode;
+  }
+
+  public void addOverridingFndecl(FndeclNode overridingFndecl) {
+    overridingFndecls.add(overridingFndecl);
+  }
+
+  public List<FndeclNode> getOverridingFndecls() {
+    return overridingFndecls;
+  }
+
+  public FndeclNode getOverridingFndecl(int index) {
+    return overridingFndecls.get(index);
   }
 
   @Override
