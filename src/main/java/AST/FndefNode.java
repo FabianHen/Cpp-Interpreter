@@ -8,8 +8,8 @@ public class FndefNode extends ASTNode {
   private BlockNode block;
 
   // Constructor
-  public FndefNode(FndeclNode fndecl, BlockNode block) {
-    super();
+  public FndefNode(FndeclNode fndecl, BlockNode block, int line) {
+    super(line);
     this.fndecl = fndecl;
     this.block = block;
 

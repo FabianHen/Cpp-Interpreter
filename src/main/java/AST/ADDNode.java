@@ -8,8 +8,8 @@ public class ADDNode extends ExprNode {
   private ExprNode e2;
 
   // Constructor
-  public ADDNode(ExprNode e1, ExprNode e2) {
-    super();
+  public ADDNode(ExprNode e1, ExprNode e2, int line) {
+    super(line);
     this.e1 = e1;
     this.e2 = e2;
     addChild(e1);

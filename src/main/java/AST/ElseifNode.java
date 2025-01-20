@@ -8,8 +8,8 @@ public class ElseifNode extends ASTNode {
   private BlockNode block;
 
   // Constructor
-  public ElseifNode(ExprNode condition, BlockNode block) {
-    super();
+  public ElseifNode(ExprNode condition, BlockNode block, int line) {
+    super(line);
     this.condition = condition;
     this.block = block;
 

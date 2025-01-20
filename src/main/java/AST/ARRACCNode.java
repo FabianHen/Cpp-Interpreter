@@ -8,8 +8,8 @@ public class ARRACCNode extends ExprNode {
   private List<ExprNode> exprNodes;
 
   // Constructor
-  public ARRACCNode(IDNode idNode, List<ExprNode> exprNodes) {
-    super();
+  public ARRACCNode(IDNode idNode, List<ExprNode> exprNodes, int line) {
+    super(line);
     this.idNode = idNode;
     this.exprNodes = exprNodes;
     addChild(idNode);

@@ -11,8 +11,9 @@ public class FncallNode extends ExprNode {
   private FndeclNode fndeclNode;
 
   // Constructor
-  public FncallNode(List<ObjcallNode> objcalls, IDNode idNode, ArgsNode argsNode, boolean hasThis) {
-    super();
+  public FncallNode(
+      List<ObjcallNode> objcalls, IDNode idNode, ArgsNode argsNode, boolean hasThis, int line) {
+    super(line);
     this.objcalls = objcalls;
     this.idNode = idNode;
     this.argsNode = argsNode;

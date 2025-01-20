@@ -8,8 +8,8 @@ public class ANDNode extends ExprNode {
   private ExprNode e2;
 
   // Constructor
-  public ANDNode(ExprNode e1, ExprNode e2) {
-    super();
+  public ANDNode(ExprNode e1, ExprNode e2, int line) {
+    super(line);
     this.e1 = e1;
     this.e2 = e2;
 

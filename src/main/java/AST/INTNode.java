@@ -7,8 +7,8 @@ public class INTNode extends ExprNode {
   private int value;
 
   // Constructor
-  public INTNode(int value) {
-    super();
+  public INTNode(int value, int line) {
+    super(line);
     this.value = value;
   }
 

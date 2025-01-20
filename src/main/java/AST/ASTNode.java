@@ -7,9 +7,15 @@ import java.util.List;
 public abstract class ASTNode {
   protected Scope currentScope;
   private final List<ASTNode> children;
+  private int line;
 
-  public ASTNode() {
+  public ASTNode(int line) {
     children = new ArrayList<>();
+    this.line = line;
+  }
+
+  public int getLine() {
+    return line;
   }
 
   public void addChild(ASTNode child) {

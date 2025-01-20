@@ -8,8 +8,8 @@ public class ArgsNode extends ExprNode {
   private boolean isArrVals;
 
   // Constructor
-  public ArgsNode(List<ExprNode> arguments) {
-    super();
+  public ArgsNode(List<ExprNode> arguments, int line) {
+    super(line);
     isArrVals = false;
     this.arguments = arguments;
     for (var child : arguments) {

@@ -6,7 +6,9 @@ public class OperatorNode extends ASTNode {
   private IDNode paramName;
   private BlockNode blockNode;
 
-  public OperatorNode(IDNode returnType, IDNode paramType, IDNode paramName, BlockNode blockNode) {
+  public OperatorNode(
+      IDNode returnType, IDNode paramType, IDNode paramName, BlockNode blockNode, int line) {
+    super(line);
     this.returnType = returnType;
     addChild(returnType);
 

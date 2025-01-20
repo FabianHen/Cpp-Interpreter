@@ -7,8 +7,8 @@ public class CHARNode extends ExprNode {
   private char value;
 
   // Constructor
-  public CHARNode(char value) {
-    super();
+  public CHARNode(char value, int line) {
+    super(line);
     this.value = value;
   }
 

@@ -7,8 +7,8 @@ public class IncDecNode extends ExprNode {
   private boolean isPre;
 
   // Constructor
-  public IncDecNode(IDNode idNode, boolean isInc, boolean isPre) {
-    super();
+  public IncDecNode(IDNode idNode, boolean isInc, boolean isPre, int line) {
+    super(line);
     this.idNode = idNode;
     this.isInc = isInc;
     this.isPre = isPre;

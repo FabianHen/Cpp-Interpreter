@@ -5,8 +5,8 @@ public class IDNode extends ExprNode {
   private String id;
 
   // Constructor
-  public IDNode(String id) {
-    super();
+  public IDNode(String id, int line) {
+    super(line);
     this.id = id;
   }
 

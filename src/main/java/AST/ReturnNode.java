@@ -8,8 +8,8 @@ public class ReturnNode extends ASTNode {
   private boolean hasThis;
 
   // Constructor
-  public ReturnNode(ExprNode expr, boolean hasThis) {
-    super();
+  public ReturnNode(ExprNode expr, boolean hasThis, int line) {
+    super(line);
     this.expr = expr;
     this.hasThis = hasThis;
 

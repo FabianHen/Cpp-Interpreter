@@ -20,8 +20,9 @@ public class BindingNode extends ASTNode {
       String assignop,
       ExprNode expr,
       boolean hasThis,
-      ARRACCNode arraccNode) {
-    super();
+      ARRACCNode arraccNode,
+      int line) {
+    super(line);
     this.objcalls = objcalls;
     this.idNode = idNode;
     this.assignop = assignop;

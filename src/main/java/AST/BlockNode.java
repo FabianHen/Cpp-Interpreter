@@ -4,8 +4,8 @@ import java.util.*;
 
 public class BlockNode extends ASTNode {
   // Constructor
-  public BlockNode() {
-    super();
+  public BlockNode(int line) {
+    super(line);
   }
 
   @Override

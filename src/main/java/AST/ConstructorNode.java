@@ -11,8 +11,8 @@ public class ConstructorNode extends ASTNode {
 
   // Constructor
   public ConstructorNode(
-      IDNode idNode, List<ParamNode> params, BlockNode block, boolean isCopyCon) {
-    super();
+      IDNode idNode, List<ParamNode> params, BlockNode block, boolean isCopyCon, int line) {
+    super(line);
     this.idNode = idNode;
     this.params = params;
     this.block = block;

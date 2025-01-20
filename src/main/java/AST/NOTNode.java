@@ -7,8 +7,8 @@ public class NOTNode extends ExprNode {
   private ExprNode expr;
 
   // Constructor
-  public NOTNode(ExprNode expr) {
-    super();
+  public NOTNode(ExprNode expr, int line) {
+    super(line);
     this.expr = expr;
 
     addChild(expr);

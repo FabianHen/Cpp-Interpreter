@@ -8,6 +8,7 @@ import java.util.List;
  * structured Symbol table. At the same time it checks that types were used correctly in the code.
  */
 public class STBuilder implements ASTVisitor<Symbol> {
+  private int errCounter = 0;
   private Scope currentScope;
   // Builtin types are defined globally for easier typechecking
   private final BuiltIn builtInVoid = new BuiltIn("void");
@@ -42,6 +43,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     for (var child : programNode.getChildren()) {
       child.accept(this);
     }
+    if (errCounter > 0) {
+      System.err.println(
+          "---The Interpreter could not be started, because the source code contains '"
+              + errCounter
+              + "' errors---");
+      System.exit(0);
+    }
     return null;
   }
 
@@ -57,7 +65,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
     // Check if the name has already been declared in any way
     Symbol symbol = currentScope.resolve(classDefNode.getIdNode().getId());
     if (symbol != null) {
-      System.err.println(classDefNode.getIdNode().getId() + " has already been declared!");
+      logError(
+          classDefNode.getIdNode().getId() + " has already been declared!", classDefNode.getLine());
       return null;
     }
     // Check if inheritScope is given and if it is valid
@@ -67,8 +76,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
       if (parentSymbol instanceof STClass stClass) {
         inheritScope = stClass;
       } else {
-        System.err.println(
-            "Cannot inherit from non class type '" + classDefNode.getIdNode().getId() + "'!");
+        logError(
+            "Cannot inherit from non class type '" + classDefNode.getIdNode().getId() + "'!",
+            classDefNode.getLine());
         return null;
       }
     }
@@ -113,11 +123,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
       Symbol symbol = this.currentScope.resolve(id);
       this.currentScope = currentObjScope;
       if (symbol == null) {
-        System.err.println("Symbol " + id + " could not be found!");
+        logError("Symbol " + id + " could not be found!", bindingNode.getLine());
         return null;
       }
       if (!(symbol instanceof Variable var)) {
-        System.err.println(symbol.getName() + " is not a variable!");
+        logError(symbol.getName() + " is not a variable!", bindingNode.getLine());
         return null;
       }
       varType = var.getType();
@@ -126,8 +136,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     if (!bindingNode.getAssignop().equals("=")) {
       // Check symbol type (int)
       if (!varType.equals(this.builtInInt)) {
-        System.err.println(
-            "Assign operator " + bindingNode.getAssignop() + " can only be used with type 'int'!");
+        logError(
+            "Assign operator " + bindingNode.getAssignop() + " can only be used with type 'int'!",
+            bindingNode.getLine());
         return null;
       }
     }
@@ -139,8 +150,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     }
     Symbol type = compareTypes(varType, (STType) exprSymbol, true);
     if (type == null) {
-      System.err.println(
-          "Cannot bind type '" + exprSymbol.getName() + "' to '" + varType.getName() + "'!");
+      logError(
+          "Cannot bind type '" + exprSymbol.getName() + "' to '" + varType.getName() + "'!",
+          bindingNode.getLine());
     }
     return type;
   }
@@ -157,8 +169,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     if (objcallNode.getIdNode() != null) {
       Symbol symbol = currentScope.resolve(objcallNode.getIdNode().getId());
       if (symbol == null) {
-        System.err.println(
-            "Object member " + objcallNode.getIdNode().getId() + " could not be found!");
+        logError(
+            "Object member " + objcallNode.getIdNode().getId() + " could not be found!",
+            objcallNode.getLine());
         return null;
       }
       STType type = symbol.getType();
@@ -184,12 +197,12 @@ public class STBuilder implements ASTVisitor<Symbol> {
     // Check if Reference
     vardeclNode.setCurrentScope(this.currentScope);
     if (vardeclNode.getIdentifier().isReference() && !(vardeclNode.getExpr() instanceof IDNode)) {
-      System.err.println("Reference has to be defined with Variable!");
+      logError("Reference has to be defined with Variable!", vardeclNode.getLine());
       return null;
     }
     // Check if id can be declared
     String id = vardeclNode.getIdentifier().getIdNode().getId();
-    if (!isAllowedVarID(id)) {
+    if (!isAllowedVarID(id, vardeclNode.getLine())) {
       return null;
     }
     // Check if type is valid
@@ -211,8 +224,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
         return null;
       }
       if (compareTypes(type, (STType) exprType, true) == null) {
-        System.err.println(
-            "Couldn't bind type '" + exprType.getName() + "' to '" + type.getName() + "'!");
+        logError(
+            "Couldn't bind type '" + exprType.getName() + "' to '" + type.getName() + "'!",
+            vardeclNode.getLine());
 
         return null;
       }
@@ -235,11 +249,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     constructorCallNode.setCurrentScope(this.currentScope);
     // Check if the variable can be defined
     String id = constructorCallNode.getInstancename().getId();
-    if (!isAllowedVarID(id)) {
+    if (!isAllowedVarID(id, constructorCallNode.getLine())) {
       return null;
     }
     // Iterates through all constructors of the class
-    List<Symbol> constructors = getAllConstructors(constructorCallNode.getTypename().getId());
+    List<Symbol> constructors =
+        getAllConstructors(
+            constructorCallNode.getTypename().getId(), constructorCallNode.getLine());
     for (var constructor : constructors) {
       Function constructorFunction = (Function) constructor;
       // saves arguments and amount of args
@@ -262,7 +278,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
         }
       }
     }
-    System.err.println("Couldn't find matching constructor!");
+    logError("Couldn't find matching constructor!", constructorCallNode.getLine());
     return null;
   }
 
@@ -295,7 +311,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     returnNode.setCurrentScope(this.currentScope);
     Function function = findMyFunction(currentScope);
     if (function == null) {
-      System.err.println("Cannot use return statement outside of a function!");
+      logError("Cannot use return statement outside of a function!", returnNode.getLine());
       return null;
     }
     Symbol returnType;
@@ -306,7 +322,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       if (returnType == null) {
         return null;
       } else if (returnType instanceof Array) {
-        System.err.println("Cannot return array!");
+        logError("Cannot return array!", returnNode.getLine());
         return null;
       }
     } else if (!returnNode.hasThis()) {
@@ -318,19 +334,20 @@ public class STBuilder implements ASTVisitor<Symbol> {
       if (symbol != null) {
         returnType = symbol;
       } else {
-        System.err.println("'this' cannot be used in this context!");
+        logError("'this' cannot be used in this context!", returnNode.getLine());
         return null;
       }
     }
     if (function.getType().equals(returnType)) {
       return returnType;
     }
-    System.err.println(
+    logError(
         "Return type '"
             + returnType.getName()
             + "' does not match type '"
             + function.getType().getName()
-            + "'!");
+            + "'!",
+        returnNode.getLine());
     return null;
   }
 
@@ -371,20 +388,22 @@ public class STBuilder implements ASTVisitor<Symbol> {
     if (expressionType instanceof BuiltIn builtIn) {
       // comparing builtin name and type enum
       if (!builtIn.getName().equals(printNodeType)) {
-        System.err.println(
-            "Print function expected " + printNodeType + " but found " + builtIn.getName() + "!");
+        logError(
+            "Print function expected " + printNodeType + " but found " + builtIn.getName() + "!",
+            printNode.getLine());
         return null;
       }
       return builtIn;
     }
     // error will be handled in expression if 'expressionType' is null
     if (expressionType != null) {
-      System.err.println(
+      logError(
           "Print function expected "
               + printNodeType
               + " but found "
               + expressionType.getName()
-              + "!");
+              + "!",
+          printNode.getLine());
     }
     return null;
   }
@@ -484,17 +503,19 @@ public class STBuilder implements ASTVisitor<Symbol> {
     Symbol symbol = currentScope.resolve(incDecNode.getIdNode().getId());
     // Check if accessed variable is declared
     if (symbol == null) {
-      System.err.println("Could not find Variable " + incDecNode.getIdNode().getId() + "!");
+      logError(
+          "Could not find Variable " + incDecNode.getIdNode().getId() + "!", incDecNode.getLine());
       return null;
     }
     // Check if this variable is an integer
     if (!this.builtInInt.equals(symbol.getType())) {
-      System.err.println(
+      logError(
           "Could not"
               + (incDecNode.isInc() ? " increase " : " decrease ")
               + "'"
               + incDecNode.getIdNode().getId()
-              + "'!");
+              + "'!",
+          incDecNode.getLine());
       return null;
     }
     return this.builtInInt;
@@ -529,7 +550,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
             // Check both ways because we don't now the order of the array values
             Symbol newSymbol = compareTypes((STType) symbol, (STType) type, true);
             if (newSymbol == null) {
-              System.err.println("Array values are not of the same type!");
+              logError("Array values are not of the same type!", argsNode.getLine());
               return null;
             }
             type = newSymbol;
@@ -607,7 +628,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     if (type instanceof Function function && function.getScope() instanceof STClass stClass) {
       return function.getName().equals(stClass.getName()) ? stClass : null;
     }
-    System.err.println("Invalid Type '" + typeNode.getClassName() + "'!");
+    logError("Invalid Type '" + typeNode.getClassName() + "'!", typeNode.getLine());
     return null;
   }
 
@@ -630,8 +651,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
       // If a non function is found there can't be a function with this name due to checks in
       // function declaration
       if (!(member instanceof Function function)) {
-        System.err.println(
-            "Function " + fncallNode.getIdNode().getId() + " could not be resolved!");
+        logError(
+            "Function " + fncallNode.getIdNode().getId() + " could not be resolved!",
+            fncallNode.getLine());
         return null;
       }
       // Check if param sizes match
@@ -650,7 +672,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
         }
       }
     }
-    System.err.println("Couldn't find function matching given parameters!");
+    logError("Couldn't find function matching given parameters!", fncallNode.getLine());
     return null;
   }
 
@@ -675,7 +697,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     this.currentScope = currentObjScope;
     // Throw error if found symbol is not an object
     if (!(symbol instanceof Variable variable)) {
-      System.err.println("Variable " + objmemNode.getIdNode().getId() + " could not be resolved!");
+      logError(
+          "Variable " + objmemNode.getIdNode().getId() + " could not be resolved!",
+          objmemNode.getLine());
       return null;
     }
     return variable.getType();
@@ -695,19 +719,22 @@ public class STBuilder implements ASTVisitor<Symbol> {
     STClass stClass = (STClass) this.currentScope;
     // Check if operator returns the class that it's defined in
     if (!stClass.getName().equals(operatorNode.getReturnType().getId())) {
-      System.err.println("Operator function has to return Object of class!");
+      logError("Operator function has to return Object of class!", operatorNode.getLine());
       return null;
     }
     // Check if param type is not the same as the class that operator is defined in
     if (!stClass.getName().equals(operatorNode.getParamType().getId())) {
-      System.err.println("Operator function parameter type has to be Object of class!");
+      logError(
+          "Operator function parameter type has to be Object of class!", operatorNode.getLine());
       return null;
     }
     // Create new function for 'operator='
     List<ParamNode> paramList = new ArrayList<>();
     ParamNode paramNode =
         new ParamNode(
-            new TypeNode(stClass.getName()), new IdentifierNode(operatorNode.getParamName(), true));
+            new TypeNode(stClass.getName(), operatorNode.getLine()),
+            new IdentifierNode(operatorNode.getParamName(), true, operatorNode.getLine()),
+            operatorNode.getLine());
     paramList.add(paramNode);
     Function operator = new Function("operator=", stClass, this.currentScope, paramList, false);
     this.currentScope.bind(operator);
@@ -733,7 +760,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     mulNode.setCurrentScope(this.currentScope);
     Symbol e1Type = mulNode.getE1().accept(this);
     Symbol e2Type = mulNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
+    return (checkBothIntegers(e1Type, e2Type, mulNode) ? this.builtInInt : null);
   }
 
   /**
@@ -747,7 +774,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     divNode.setCurrentScope(this.currentScope);
     Symbol e1Type = divNode.getE1().accept(this);
     Symbol e2Type = divNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
+    return (checkBothIntegers(e1Type, e2Type, divNode) ? this.builtInInt : null);
   }
 
   /**
@@ -761,7 +788,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     addNode.setCurrentScope(this.currentScope);
     Symbol e1Type = addNode.getE1().accept(this);
     Symbol e2Type = addNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
+    return (checkBothIntegers(e1Type, e2Type, addNode) ? this.builtInInt : null);
   }
 
   /**
@@ -775,7 +802,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     subNode.setCurrentScope(this.currentScope);
     Symbol e1Type = subNode.getE1().accept(this);
     Symbol e2Type = subNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInInt : null);
+    return (checkBothIntegers(e1Type, e2Type, subNode) ? this.builtInInt : null);
   }
 
   /**
@@ -789,7 +816,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     equalsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = equalsNode.getE1().accept(this);
     Symbol e2Type = equalsNode.getE2().accept(this);
-    return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkComparison(e1Type, e2Type, equalsNode) ? this.builtInBool : null);
   }
 
   /**
@@ -803,7 +830,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     neaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = neaqualsNode.getE1().accept(this);
     Symbol e2Type = neaqualsNode.getE2().accept(this);
-    return (checkComparison(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkComparison(e1Type, e2Type, neaqualsNode) ? this.builtInBool : null);
   }
 
   /**
@@ -817,7 +844,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     greaterNode.setCurrentScope(this.currentScope);
     Symbol e1Type = greaterNode.getE1().accept(this);
     Symbol e2Type = greaterNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkBothIntegers(e1Type, e2Type, greaterNode) ? this.builtInBool : null);
   }
 
   /**
@@ -831,7 +858,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     lessNode.setCurrentScope(this.currentScope);
     Symbol e1Type = lessNode.getE1().accept(this);
     Symbol e2Type = lessNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkBothIntegers(e1Type, e2Type, lessNode) ? this.builtInBool : null);
   }
 
   /**
@@ -845,7 +872,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     geaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = geaqualsNode.getE1().accept(this);
     Symbol e2Type = geaqualsNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkBothIntegers(e1Type, e2Type, geaqualsNode) ? this.builtInBool : null);
   }
 
   /**
@@ -859,7 +886,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     leaqualsNode.setCurrentScope(this.currentScope);
     Symbol e1Type = leaqualsNode.getE1().accept(this);
     Symbol e2Type = leaqualsNode.getE2().accept(this);
-    return (checkBothIntegers(e1Type, e2Type) ? this.builtInBool : null);
+    return (checkBothIntegers(e1Type, e2Type, leaqualsNode) ? this.builtInBool : null);
   }
 
   /**
@@ -874,12 +901,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     Symbol e1Type = andNode.getE1().accept(this);
     Symbol e2Type = andNode.getE2().accept(this);
     if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
-      System.err.println(
+      logError(
           "Cannot use types "
               + e1Type.getName()
               + " and "
               + e2Type.getName()
-              + " with '&&' operator");
+              + " with '&&' operator",
+          andNode.getLine());
       return null;
     }
     return this.builtInBool;
@@ -897,12 +925,13 @@ public class STBuilder implements ASTVisitor<Symbol> {
     Symbol e1Type = orNode.getE1().accept(this);
     Symbol e2Type = orNode.getE2().accept(this);
     if (!this.builtInBool.equals(e1Type) || !this.builtInBool.equals(e2Type)) {
-      System.err.println(
+      logError(
           "Cannot use types "
               + e1Type.getName()
               + " and "
               + e2Type.getName()
-              + " with '||' operator");
+              + " with '||' operator",
+          orNode.getLine());
       return null;
     }
     return this.builtInBool;
@@ -920,29 +949,31 @@ public class STBuilder implements ASTVisitor<Symbol> {
     Symbol symbol = currentScope.resolve(arraccNode.getIdNode().getId());
     // Check if any symbol was found
     if (symbol == null) {
-      System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
+      logError("Couldn't resolve variable " + arraccNode.getIdNode().getId(), arraccNode.getLine());
       return null;
     }
     // Check if a variable was found
     if (!(symbol instanceof Variable variable)) {
-      System.err.println("Couldn't resolve variable " + arraccNode.getIdNode().getId());
+      logError("Couldn't resolve variable " + arraccNode.getIdNode().getId(), arraccNode.getLine());
       return null;
     }
     // Check if found variable is an array
     if (!(variable.getType() instanceof Array array)) {
-      System.err.println(
-          "Cannot access index of non array variable " + arraccNode.getIdNode().getId());
+      logError(
+          "Cannot access index of non array variable " + arraccNode.getIdNode().getId(),
+          arraccNode.getLine());
       return null;
     }
     // Check if array access dimension doesn't fit variable array dimension
     if (arraccNode.getDimension() > array.getDimension()) {
-      System.err.println("Dimension mismatch in " + arraccNode.getIdNode().getId());
+      logError("Dimension mismatch in " + arraccNode.getIdNode().getId(), arraccNode.getLine());
       return null;
     }
     // Check if array is accessed with int
     for (var expr : arraccNode.getExprNodes()) {
       if (!this.builtInInt.equals(expr.accept(this))) {
-        System.err.println("Cannot access index of array with non int type expression!");
+        logError(
+            "Cannot access index of array with non int type expression!", arraccNode.getLine());
         return null;
       }
     }
@@ -962,7 +993,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     notNode.setCurrentScope(this.currentScope);
     Symbol expressionType = notNode.getExpr().accept(this);
     if (!this.builtInBool.equals(expressionType)) {
-      System.err.println("Cannot negate variable of type " + expressionType.getName());
+      logError("Cannot negate variable of type " + expressionType.getName(), notNode.getLine());
       return null;
     }
     return this.builtInBool;
@@ -1015,7 +1046,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     idNode.setCurrentScope(this.currentScope);
     Symbol var = currentScope.resolve(idNode.getId());
     if (var == null) {
-      System.err.println("Couldn't find variable " + idNode.getId());
+      logError("Couldn't find variable " + idNode.getId(), idNode.getLine());
       return null;
     }
     return var.getType();
@@ -1033,14 +1064,15 @@ public class STBuilder implements ASTVisitor<Symbol> {
     // Check if the constructor is declared in a class
     if (this.currentScope instanceof STClass stClass) {
       if (!stClass.getName().equals(constructorNode.getIdNode().getId())) {
-        System.err.println(
+        logError(
             "Constructor name '"
                 + constructorNode.getIdNode().getId()
-                + "' does not match class name!");
+                + "' does not match class name!",
+            constructorNode.getLine());
         return null;
       }
     } else {
-      System.err.println("Cannot define Constructor outside of class");
+      logError("Cannot define Constructor outside of class", constructorNode.getLine());
       return null;
     }
     // Check if constructor has been defined with this parameters
@@ -1051,10 +1083,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
         if (constructorNode.getParams().size() == foundConstructor.getParams().size()) {
           if (compareListsOfTypes(
               constructorNode.getParams(), foundConstructor.getParams(), false)) {
-            System.err.println(
+            logError(
                 "Constructor "
                     + constructorNode.getIdNode().getId()
-                    + " can't be overloaded with same parameters!");
+                    + " can't be overloaded with same parameters!",
+                constructorNode.getLine());
             return null;
           }
         }
@@ -1093,7 +1126,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
     if (hasThis) {
       Symbol foundClass = findMyClass(currentObjScope);
       if (foundClass == null) {
-        System.err.println("Cannot use 'this' outside of class");
+        logError("Cannot use 'this' outside of class", objectCalls.getFirst().getLine());
         return false;
       }
       currentObjScope = (Scope) foundClass;
@@ -1102,7 +1135,8 @@ public class STBuilder implements ASTVisitor<Symbol> {
     for (var child : objectCalls) {
       Symbol obj = child.accept(this);
       if (obj == null) {
-        System.err.println(child.getIdNode().getId() + " could not be found!");
+        logError(
+            child.getIdNode().getId() + " could not be found!", objectCalls.getFirst().getLine());
         this.currentScope = currentObjScope;
         return false;
       }
@@ -1110,8 +1144,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
         this.currentScope = type;
       } else {
         // Builtin types don't have members so they can't be accessed
-        System.err.println(
-            "Variable " + obj.getName() + " is from BuiltIn type and can't have any members!");
+        logError(
+            "Variable " + obj.getName() + " is from BuiltIn type and can't have any members!",
+            objectCalls.getFirst().getLine());
         this.currentScope = currentObjScope;
         return false;
       }
@@ -1161,19 +1196,20 @@ public class STBuilder implements ASTVisitor<Symbol> {
    * Checks if the given id string is free or already defined in some way
    *
    * @param id the id name that should be checked
+   * @param line the line-number, where the id is located
    * @return if the string is allowed to be a new id
    */
-  private boolean isAllowedVarID(String id) {
+  private boolean isAllowedVarID(String id, int line) {
     Symbol symbolInScope = currentScope.resolveMember(id);
     if (symbolInScope != null) {
-      System.err.println("Variable " + id + " has already been declared in this scope!");
+      logError("Variable " + id + " has already been declared in this scope!", line);
       return false;
     }
     Symbol symbolInAllScopes = currentScope.resolve(id);
     // If the found symbol is a scope it has to be a class or function not a variable
     if (symbolInAllScopes instanceof Scope) {
-      System.err.println(
-          "Cannot use name of existing class or function '" + id + "' as variable name!");
+      logError(
+          "Cannot use name of existing class or function '" + id + "' as variable name!", line);
       return false;
     }
     return true;
@@ -1183,13 +1219,14 @@ public class STBuilder implements ASTVisitor<Symbol> {
    * Searches all constructors of a given class and returns them in a list of Symbols
    *
    * @param name the name of the class whose constructors will be returned
+   * @param line the line, where the class is used
    * @return a list of found constructors
    */
-  private List<Symbol> getAllConstructors(String name) {
+  private List<Symbol> getAllConstructors(String name, int line) {
     Symbol symbol = currentScope.resolve(name);
     // Check if anything could be found
     if (symbol == null) {
-      System.err.println("Could not find class '" + name + "'!");
+      logError("Could not find class '" + name + "'!", line);
       return new ArrayList<>();
     }
     // If a possible constructor was found
@@ -1199,11 +1236,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
           // The found function was a constructor of a class
           return stClass.resolveAllMember(stClass.getName());
         } else {
-          System.err.println("'" + name + "' is not a class!");
+          logError("'" + name + "' is not a class!", line);
           return new ArrayList<>();
         }
       } else {
-        System.err.println("'" + name + "' is not a class!");
+        logError("'" + name + "' is not a class!", line);
         return new ArrayList<>();
       }
     }
@@ -1212,7 +1249,7 @@ public class STBuilder implements ASTVisitor<Symbol> {
       return stClass.resolveAllMember(stClass.getName());
     } else {
       // If the found symbol was neither a function nor a class it has to be a variable
-      System.err.println("Cannot call variable '" + symbol.getName() + "' as constructor!");
+      logError("Cannot call variable '" + symbol.getName() + "' as constructor!", line);
       return new ArrayList<>();
     }
   }
@@ -1263,8 +1300,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     // Check valid function name
     Symbol symbol = this.currentScope.resolve(fndeclNode.getIdNode().getId());
     if (symbol instanceof STClass stClass) {
-      System.err.println(
-          "Function '" + stClass.getName() + "' cannot have the same name as a class");
+      logError(
+          "Function '" + stClass.getName() + "' cannot have the same name as a class",
+          fndeclNode.getLine());
     }
     // Check if function can be declared with this params
     List<Symbol> memberSymbols = this.currentScope.resolveAll(fndeclNode.getIdNode().getId());
@@ -1272,8 +1310,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     for (var member : memberSymbols) {
       if (!(member instanceof Function foundFunction)) {
         // A not function with this name was found
-        System.err.println(
-            fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!");
+        logError(
+            fndeclNode.getIdNode().getId() + " conflicts with a previous declaration!",
+            fndeclNode.getLine());
         return null;
       }
       if (fndeclNode.getParams().size() == foundFunction.getParams().size()) {
@@ -1281,8 +1320,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
           if (this.currentScope.equals(foundFunction.getScope())) {
             // Found function is in the same class
             if (fndefNode == null || foundFunction.hasBeenDefined()) {
-              System.err.println(
-                  "Cannot override function '" + foundFunction.getName() + "' in same class!");
+              logError(
+                  "Cannot override function '" + foundFunction.getName() + "' in same class!",
+                  fndefNode.getLine());
               return null;
             }
             // Declared function is defined in given fndefNode
@@ -1290,8 +1330,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
             return foundFunction;
           } else if (!foundFunction.isVirtual()) {
             // found function is in parent class but not virtual
-            System.err.println(
-                "Cannot override non virtual function '" + foundFunction.getName() + "'!");
+            logError(
+                "Cannot override non virtual function '" + foundFunction.getName() + "'!",
+                foundFunction.getFndeclNode().getLine());
             return null;
           } else {
             // found function is in parent class and virtual
@@ -1303,8 +1344,9 @@ public class STBuilder implements ASTVisitor<Symbol> {
     }
     // Check if this function needs to override but doesn't
     if (!didOverride && fndeclNode.isOverride()) {
-      System.err.println(
-          "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!");
+      logError(
+          "There is no matching function '" + fndeclNode.getIdNode().getId() + "' to override!",
+          fndeclNode.getLine());
       return null;
     }
     // create new function
@@ -1364,10 +1406,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
    */
   private boolean handleConditionBlock(Symbol conditionType, BlockNode block) {
     if (!this.builtInBool.equals(conditionType)) {
-      System.err.println(
+      logError(
           "Type of variable '"
               + (conditionType == null ? "null" : conditionType.getName())
-              + "' is not a valid condition type!");
+              + "' is not a valid condition type!",
+          block.getLine());
       return false;
     }
     this.currentScope = new Scope(currentScope);
@@ -1402,12 +1445,14 @@ public class STBuilder implements ASTVisitor<Symbol> {
    *
    * @param type1 the first type to compare
    * @param type2 the second type to compare
+   * @param node an ASTNode which is used for the line if an error was found
    * @return {@code true} if both types are built in types
    */
-  private boolean checkComparison(Symbol type1, Symbol type2) {
+  private boolean checkComparison(Symbol type1, Symbol type2, ASTNode node) {
     if (!(type1 instanceof BuiltIn) || !(type2 instanceof BuiltIn)) {
-      System.err.println(
-          "Cannot compare builtin types " + type1.getName() + " and " + type2.getName() + "!");
+      logError(
+          "Cannot compare builtin types " + type1.getName() + " and " + type2.getName() + "!",
+          node.getLine());
       return false;
     }
     return true;
@@ -1418,18 +1463,25 @@ public class STBuilder implements ASTVisitor<Symbol> {
    *
    * @param type1 the first type to compare
    * @param type2 the second type to compare
+   * @param node ASTNode which is used for the line, if an error was found
    * @return {@code true} if both types are integers
    */
-  private boolean checkBothIntegers(Symbol type1, Symbol type2) {
+  private boolean checkBothIntegers(Symbol type1, Symbol type2, ASTNode node) {
     if (!this.builtInInt.equals(type1) || !this.builtInInt.equals(type2)) {
-      System.err.println(
+      logError(
           "Cannot use types "
               + (type1 == null ? "null" : type1.getName())
               + " and "
               + (type2 == null ? "null" : type2.getName())
-              + " in this context!");
+              + " in this context!",
+          node.getLine());
       return false;
     }
     return true;
+  }
+
+  private void logError(String msg, int line) {
+    errCounter++;
+    System.err.println("Error; [" + line + "]: " + msg);
   }
 }
