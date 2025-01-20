@@ -579,11 +579,11 @@ public class STBuilder implements ASTVisitor<Symbol> {
   public Symbol visit(BlockNode blockNode) {
     blockNode.setCurrentScope(this.currentScope);
     for (var child : blockNode.getChildren()) {
-      if(child instanceof BlockNode) {
+      if (child instanceof BlockNode) {
         this.currentScope = new Scope(this.currentScope);
         child.accept(this);
         this.currentScope = this.currentScope.getParent();
-      }else{
+      } else {
         child.accept(this);
       }
     }
