@@ -123,6 +123,7 @@ The `ASTBuilder` class extends the `CppBaseVisitor` to visit different parts of 
 
 ### ST Implementation
 **Purpose:** Builds the symbol table and performs semantic analysis.
+
 The `STBuilder` class implements `ASTVisitor` to traverse the AST and construct a tree-structured symbol table while performing type checks.
 
 ![Image of STBuilder Class structure](./doc/SymbolTable.png)
@@ -139,6 +140,7 @@ The `STBuilder` class implements `ASTVisitor` to traverse the AST and construct 
 
 ### Interpreter Implementation
 **Purpose:** Handles the interpretation logic.
+
 The `Interpreter` class is designed to visit nodes of the AST and execute the corresponding operations. It maintains an environment that tracks variable bindings, and function calls.
 
 ![Image of Interpreter Class structure](./doc/Interpreter.png)
