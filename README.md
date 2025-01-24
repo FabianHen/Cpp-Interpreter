@@ -49,13 +49,11 @@ The interpreter executes the code by traversing the AST and performing the opera
 - Standard values (`false`, `0`, `''`) are automatically set upon declaration.
 
 ### Variables
-- **Fully implemented**
 - Declaration (with and without assignment)
 - Bindings
 - Type checking
 
 ### Arrays
-- **Fully implemented**
 - Support for multi-dimensional arrays
 - Automatically initialized with null values
 - Dimension and type checks upon definition
@@ -76,7 +74,6 @@ The interpreter executes the code by traversing the AST and performing the opera
 - Concatenation of conditions with `&&` and `||` possible
 
 ### Functions (Definition, Declaration, Calls)
-- **Fully implemented**
 - Declaration and subsequent definition
 - Overloading supported
 - Overriding **only** for `virtual` methods 
@@ -85,7 +82,6 @@ The interpreter executes the code by traversing the AST and performing the opera
 - `Return` are statements type-checked but not required in every path of a method
 
 ### Classes (with Attributes and Methods)
-- **Fully implemented**
 - Access to class variables and functions
 - Big 3:
     - Standard Constructor: Overloading, calling super constructors, constructor call with parameters supported
@@ -94,17 +90,15 @@ The interpreter executes the code by traversing the AST and performing the opera
 - Variables and functions must be declared within the class before use, unlike in C++
 
 ### Single Inheritance
-- **Fully implemented**
 - Constructor of superclasses are called automatically
 - Inheritance of functions and attributes
 - Overriding functions from all superclasses
 
 ### Polymorphism (Dynamic, Static)
-- **Fully implemented**, with dynamic and static polymorphism
-    - Our output matches the behavior of the standard C++ compiler, differing from the example's behavior.
+- Dynamic and static polymorphism
 
 ### Built-in Functions: `print_bool`, `print_int`, `print_char`
-- **Fully implemented** as `print`
+- implemented as `print`
 - New line printed using `'\n'`
 - `print_bool()` prints `true` or `false` instead of `0` or `1`
 
