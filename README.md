@@ -20,9 +20,9 @@
     - [Built-in Functions: `print_bool`, `print_int`, `print_char`](#built-in-functions-print_bool-print_int-print_char)
     - [General](#general)
   - [Class Structure](#class-structure)
-    - [ASTBuilder](#astbuilder)
-    - [STBuilder](#stbuilder)
-    - [Interpreter](#interpreter)
+    - [AST Implementation](#ast-implementation)
+    - [ST Implementation](#st-implementation)
+    - [Interpreter Implementation](#interpreter-implementation)
 ---
 ## Project Overview
 
@@ -116,12 +116,12 @@ The interpreter executes the code by traversing the AST and performing the opera
 
 ## Class Structure
 
-### ASTBuilder
+### AST implementation
 **Purpose:** Constructs the AST from the parsed source code.
 
 The `ASTBuilder` class extends the `CppBaseVisitor` to visit different parts of the parsed code and construct corresponding nodes in the AST. Most of the parser rules of our grammar have their own class. All of those classes extend the base ASTNode Class. ParseTree nodes that were not useful for further steps were not implemented as ASTNodes. An example for this process is the `stmt` ParseTree Node. This Node has always on child and could therefor be replaced with an ASTNode of this child.
 
-### STBuilder
+### ST Implementation
 **Purpose:** Builds the symbol table and performs semantic analysis.
 The `STBuilder` class implements `ASTVisitor` to traverse the AST and construct a tree-structured symbol table while performing type checks.
 
@@ -137,7 +137,7 @@ The `STBuilder` class implements `ASTVisitor` to traverse the AST and construct 
   - **Builtin**: Represents a built-in type such as `int`, `char`, or `bool`.
   - **Array**: Stores an array type with its base type and dimensions.
 
-### Interpreter
+### Interpreter Implementation
 **Purpose:** Handles the interpretation logic.
 The `Interpreter` class is designed to visit nodes of the AST and execute the corresponding operations. It maintains an environment that tracks variable bindings, and function calls.
 
