@@ -76,8 +76,7 @@ public class Func implements Callable {
       Value argsValue = (Value) value.accept(interpreter);
       interpreter.setEnvironment(funcEnv);
       if (param.getIdentifier().isReference()) {
-        funcEnv.defineVariable(
-            param.getIdentifier().getIdNode().getId(),argsValue);
+        funcEnv.defineVariable(param.getIdentifier().getIdNode().getId(), argsValue);
       } else {
         funcEnv.defineVariable(
             param.getIdentifier().getIdNode().getId(), new Value(argsValue.getValue()));

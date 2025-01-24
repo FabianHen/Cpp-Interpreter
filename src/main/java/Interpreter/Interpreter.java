@@ -242,7 +242,10 @@ public class Interpreter implements ASTVisitor<Object> {
   public Object visit(WhileNode whileNode) {
     this.currentEnvironment = new Environment(this.currentEnvironment);
     while ((boolean) ((Value) whileNode.getCondition().accept(this)).getValue()) {
-      whileNode.getBlock().accept(this);
+      Object returnObj = whileNode.getBlock().accept(this);
+      if(returnObj != null){
+        return returnObj;
+      }
       currentEnvironment.clear();
     }
     this.currentEnvironment = this.currentEnvironment.getEnclosing();
@@ -252,33 +255,27 @@ public class Interpreter implements ASTVisitor<Object> {
   @Override
   public Object visit(IfNode ifNode) {
     if ((boolean) ((Value) ifNode.getCondition().accept(this)).getValue()) {
-      ifNode.getBlock().accept(this);
-      return null;
+      return ifNode.getBlock().accept(this);
     }
     for (var elif : ifNode.getElseifblocks()) {
-      if ((boolean) elif.accept(this)) {
-        return null;
+      if ((boolean) ((Value)elif.getCondition().accept(this)).getValue()) {
+        return elif.accept(this);
       }
     }
     if (ifNode.getElseblock() != null) {
-      ifNode.getElseblock().accept(this);
+      return ifNode.getElseblock().accept(this);
     }
     return null;
   }
 
   @Override
   public Object visit(ElseifNode elseifNode) {
-    if ((boolean) ((Value) elseifNode.getCondition().accept(this)).getValue()) {
-      elseifNode.getBlock().accept(this);
-      return true;
-    }
-    return false;
+    return elseifNode.getBlock().accept(this);
   }
 
   @Override
   public Object visit(ElseNode elseNode) {
-    elseNode.getBlock().accept(this);
-    return null;
+    return elseNode.getBlock().accept(this);
   }
 
   /**
@@ -331,7 +328,19 @@ public class Interpreter implements ASTVisitor<Object> {
       if (child instanceof ReturnNode returnNode) {
         return ((Value) returnNode.accept(this)).getValue();
       }
-      child.accept(this);
+      if (child instanceof IfNode ifNode) {
+        Object ifReturnObj = ifNode.accept(this);
+        if(ifReturnObj != null){
+          return ifReturnObj;
+        }
+      }else if(child instanceof WhileNode whileNode) {
+        Object whileReturnObj = whileNode.accept(this);
+        if(whileReturnObj != null){
+          return whileReturnObj;
+        }
+      }else {
+        child.accept(this);
+      }
     }
     return null;
   }
